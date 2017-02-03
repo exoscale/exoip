@@ -5,7 +5,28 @@ import (
 	"time"
 )
 
+func (engine *Engine) SwitchToBackup() {
+	Logger.Warning("switching host to back-up state")
+}
 
+func (engine *Engine) SwitchToMaster() {
+	Logger.Warning("switching host to master state")
+}
+
+func (engine *Engine) PerformStateTransition(state State) {
+
+	if engine.State == state {
+		return
+	}
+
+	engine.State = state
+
+	if state == StateBackup {
+		engine.SwitchToBackup()
+	} else {
+		engine.SwitchToMaster()
+	}
+}
 
 func (engine *Engine) CheckState() {
 
@@ -31,9 +52,9 @@ func (engine *Engine) CheckState() {
 	}
 
 	if best_advertisement == false {
-		Logger.Info("host is backup")
+		engine.PerformStateTransition(StateBackup)
 	} else {
-		Logger.Info("host is master")
+		engine.PerformStateTransition(StateMaster)
 	}
 
 	for _, peer := range(dead_peers) {
