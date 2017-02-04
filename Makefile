@@ -26,7 +26,7 @@ clean:
 	$(GO) clean
 
 cleandeps: clean
-	$(RM) $(PWD)/build
+	$(RM) -r $(PWD)/build
 
 deps:
 	$(GO) get github.com/pyr/egoscale/src/egoscale
