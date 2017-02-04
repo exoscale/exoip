@@ -30,7 +30,6 @@ func (engine *Engine) PerformStateTransition(state State) {
 func (engine *Engine) CheckState() {
 
 	time.Sleep(Skew)
-	Logger.Info("checking for state changes")
 
 	now := CurrentTimeMillis()
 

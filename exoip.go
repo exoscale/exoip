@@ -18,8 +18,8 @@ var dead_ratio = flag.Int("r", 3, "Dead ratio")
 var exo_key = flag.String("xk", "", "Exoscale API Key")
 var exo_secret = flag.String("xs", "", "Exoscale API Secret")
 var exo_endpoint = flag.String("xe", "https://api.exoscale.ch/compute", "Exoscale API Endpoint")
-var exo_vm = flag.String("xv", "", "Exoscale VM ID")
 var exo_nic = flag.String("xn", "", "Exoscale NIC ID")
+var exo_ip = flag.String("xi", "", "Exoscale Elastic IP to watch over")
 var peers stringslice
 
 func (s *stringslice) String() string {
@@ -38,7 +38,7 @@ func main() {
 	exoip.SetupLogger()
 
 	ego := egoscale.NewClient(*exo_endpoint, *exo_key, *exo_secret)
-	engine := exoip.NewEngine(*exo_vm, *exo_nic, ego, *adv_timer, *vhid, *prio, *dead_ratio, peers)
+	engine := exoip.NewEngine(*exo_nic, *exo_ip, ego, *adv_timer, *vhid, *prio, *dead_ratio, peers)
 	go engine.NetworkAdvertise()
 	engine.NetworkLoop(*address)
 

@@ -11,7 +11,14 @@ type Peer struct {
 	Dead            bool
 	Priority	byte
 	LastSeen	int64
+	NicId		string
 	Conn		*net.UDPConn
+}
+
+type Payload struct {
+	Priority	byte
+	ExoIP		net.IP
+	NicId		string
 }
 
 type State int
@@ -32,6 +39,7 @@ type Engine struct {
 	LastSend	int64
 	InitHoldOff	int64
 	ExoVM		string
-	ExoIP		string
+	ExoNic		[]byte
+	ExoIP		net.IP
 	Exo             *egoscale.Client
 }

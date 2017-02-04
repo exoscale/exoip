@@ -18,13 +18,18 @@ and to some extent
 [VRRP](http://en.wikipedia.org/wiki/Virtual_Router_Redundancy_Protocol).
 
 The idea is quite simple, for each of it's configured peers, **exoip**
-sends a 2-byte payload through **UDP**. The payload consists of an ID
-that must be shared accross alll peers, and a priority to help elect
-masters:
+sends a 24-byte payload through **UDP**. The payload consists of a
+protocol version, a (repeated, for error checking) priority to help
+elect masters, the *Elastic IP* that must be shared accross alll
+peers, and the peer's Nic ID.
 
-    +----------------+----------------+
-    |    ID (1byte)  | Prio (1byte)   |
-	+----------------+----------------+
+The layout of the payload is as follows:
+
+      2bytes 2bytes  4bytes           16bytes
+    +-------+-------+---------------+-------------------------------+
+	| PROTO | PRIO  |    EIP        |   NicID (128bit UUID)         |
+	+-------+-------+---------------+-------------------------------+
+
 	
 When a peer fails to advertise for a configurable period of time, it
 is considered dead and action is taken to reclaim its ownership of
@@ -46,14 +51,14 @@ the configured *Elastic IP Address*.
     	Dead ratio (default 3)
     -t int
     	Advertisement interval in seconds (default 1)
+    -xi string
+	    Exoscale Elastic IP to watch over
     -xk string
     	Exoscale API Key
     -xn string
     	Exoscale NIC ID
     -xs string
     	Exoscale API Secret
-    -xv string
-    	Exoscale VM ID
 
 ## Building
 

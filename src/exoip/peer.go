@@ -28,20 +28,20 @@ func (engine *Engine) FindPeer(addr net.UDPAddr) *Peer {
 	return nil
 }
 
-func (engine *Engine) UpdatePeer(addr net.UDPAddr, vhid byte, prio byte) {
+func (engine *Engine) UpdatePeer(addr net.UDPAddr, payload *Payload) {
 
-	if vhid != engine.VHID {
-		Logger.Warning("peer sent message for unknown VHID")
+	if !engine.ExoIP.Equal(payload.ExoIP) {
+		Logger.Warning("peer sent message for wrong EIP")
 		return
 	}
 
 	peer := engine.FindPeer(addr)
 	if peer == nil {
-
 		Logger.Warning("peer not found in configuration")
 		return
 	}
-	peer.Priority = prio
+	peer.Priority = payload.Priority
+	peer.NicId = payload.NicId
 	peer.LastSeen = CurrentTimeMillis()
 }
 
