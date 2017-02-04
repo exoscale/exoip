@@ -1,6 +1,7 @@
 package exoip
 
 import (
+	"fmt"
 	"net"
 )
 
@@ -45,8 +46,14 @@ func (engine *Engine) UpdatePeer(addr net.UDPAddr, vhid byte, prio byte) {
 }
 
 func (engine *Engine) PeerIsNewlyDead(now int64, peer *Peer) bool {
-	dead := (peer.LastSeen < (now - (int64(engine.Interval * engine.DeadRatio) * 1000)))
+	peer_diff := now - peer.LastSeen
+	dead := peer_diff > int64(engine.Interval * engine.DeadRatio) * 1000
 	if dead != peer.Dead {
+		if dead {
+			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, considering dead.", peer.IP, peer_diff))
+		} else {
+			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, is now back alive.", peer.IP, peer_diff))
+		}
 		peer.Dead = dead
 		return dead
 	}
@@ -55,4 +62,7 @@ func (engine *Engine) PeerIsNewlyDead(now int64, peer *Peer) bool {
 
 func (engine *Engine) BackupOf(peer *Peer) bool {
 	return (!peer.Dead && peer.Priority < engine.Priority)
+}
+
+func (engine *Engine) HandleDeadPeer(peer *Peer) {
 }

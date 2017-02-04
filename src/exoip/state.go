@@ -1,16 +1,15 @@
 package exoip
 
 import (
-	"fmt"
 	"time"
 )
 
 func (engine *Engine) SwitchToBackup() {
-	Logger.Warning("switching host to back-up state")
+	Logger.Warning("switching to back-up state")
 }
 
 func (engine *Engine) SwitchToMaster() {
-	Logger.Warning("switching host to master state")
+	Logger.Warning("switching to master state")
 }
 
 func (engine *Engine) PerformStateTransition(state State) {
@@ -31,6 +30,7 @@ func (engine *Engine) PerformStateTransition(state State) {
 func (engine *Engine) CheckState() {
 
 	time.Sleep(Skew)
+	Logger.Info("checking for state changes")
 
 	now := CurrentTimeMillis()
 
@@ -58,6 +58,6 @@ func (engine *Engine) CheckState() {
 	}
 
 	for _, peer := range(dead_peers) {
-		Logger.Info(fmt.Sprintf("found dead peer:", peer.IP))
+		engine.HandleDeadPeer(peer)
 	}
 }

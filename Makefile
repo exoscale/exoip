@@ -8,6 +8,8 @@ SRCS=   src/exoip/network.go				\
 	src/exoip/peer.go				\
 	src/exoip/time.go				\
 	src/exoip/state.go				\
+	src/exoip/assert.go				\
+	src/exoip/logging.go				\
 	src/exoip/types.go
 
 RM?=rm -f
@@ -26,5 +28,5 @@ clean:
 cleandeps: clean
 	$(RM) $(PWD)/build
 
-#deps:
-#	$(GO) get gopkg.in/yaml.v2
+deps:
+	$(GO) get github.com/pyr/egoscale/src/egoscale

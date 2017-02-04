@@ -2,6 +2,8 @@ package exoip
 
 import (
 	"net"
+	"github.com/pyr/egoscale/src/egoscale"
+
 )
 
 type Peer struct {
@@ -29,4 +31,7 @@ type Engine struct {
 	State		State
 	LastSend	int64
 	InitHoldOff	int64
+	ExoVM		string
+	ExoIP		string
+	Exo             *egoscale.Client
 }
