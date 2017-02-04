@@ -6,10 +6,12 @@ import (
 
 func (engine *Engine) SwitchToBackup() {
 	Logger.Warning("switching to back-up state")
+	engine.ReleaseNic(engine.NicId)
 }
 
 func (engine *Engine) SwitchToMaster() {
 	Logger.Warning("switching to master state")
+	engine.ObtainNic(engine.NicId)
 }
 
 func (engine *Engine) PerformStateTransition(state State) {

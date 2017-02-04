@@ -39,7 +39,7 @@ type Engine struct {
 	LastSend	int64
 	InitHoldOff	int64
 	ExoVM		string
-	ExoNic		[]byte
+	NicId		string
 	ExoIP		net.IP
 	Exo             *egoscale.Client
 }

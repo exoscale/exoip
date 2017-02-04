@@ -65,4 +65,5 @@ func (engine *Engine) BackupOf(peer *Peer) bool {
 }
 
 func (engine *Engine) HandleDeadPeer(peer *Peer) {
+	engine.ReleaseNic(peer.NicId)
 }
