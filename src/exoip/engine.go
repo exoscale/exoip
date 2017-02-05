@@ -60,9 +60,14 @@ func UUIDToStr(uuidbuf []byte) string {
 	return hexuuid
 }
 
-func NewEngine(nicid string, ip string, client *egoscale.Client, interval int,
-	vhid int, prio int, dead_ratio int, peers []string) *Engine {
+func NewEngine(client *egoscale.Client, ip string, interval int,
+	prio int, dead_ratio int, peers []string) *Engine {
 
+	mserver, err := FindMetadataServer()
+	if err != nil {
+		panic(err)
+	}
+	nicid, err := FetchMyNic(client, mserver)
 	uuidbuf, err := StrToUUID(nicid)
 	if err != nil {
 		panic(err)
@@ -98,6 +103,7 @@ func NewEngine(nicid string, ip string, client *egoscale.Client, interval int,
 	for i, b := range(uuidbuf) {
 		sendbuf[i+8] = b
 	}
+
 	engine := Engine{
 		DeadRatio: dead_ratio,
 		Interval: interval,

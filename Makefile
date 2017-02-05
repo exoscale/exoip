@@ -8,6 +8,8 @@ SRCS=   src/exoip/network.go				\
 	src/exoip/peer.go				\
 	src/exoip/time.go				\
 	src/exoip/state.go				\
+	src/exoip/api.go				\
+	src/exoip/metadata.go				\
 	src/exoip/assert.go				\
 	src/exoip/logging.go				\
 	src/exoip/types.go
