@@ -16,6 +16,8 @@ const ProtoVersion = "0201"
 const SkewMillis = 100
 const Skew time.Duration = 100 * time.Millisecond
 
+var Verbose bool = false
+
 func remove_dash(r rune) rune {
 	if (r == '-') {
 		return -1

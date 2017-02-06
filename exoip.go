@@ -5,12 +5,12 @@ import (
 	"os"
 	"fmt"
 	"strings"
-	"strconv"
 	"exoip"
 	"github.com/pyr/egoscale/src/egoscale"
 )
 
 type stringslice []string
+
 
 var timer = flag.Int("t", 1, "Advertisement interval in seconds")
 var prio = flag.Int("P", 10, "Host priority (lowest wins)")
@@ -21,78 +21,71 @@ var exo_secret = flag.String("xs", "", "Exoscale API Secret")
 var exo_endpoint = flag.String("xe", "https://api.exoscale.ch/compute", "Exoscale API Endpoint")
 var exo_sg = flag.String("G", "", "Exoscale Security Group to use to create list of peers")
 var eip = flag.String("xi", "", "Exoscale Elastic IP to watch over")
+var verbose = flag.Bool("v", false, "Log additional information")
+var validate_config = flag.Bool("n", false, "Validate configuration and exit")
 var peers stringslice
+var reset_peers bool = false
 
 func (s *stringslice) String() string {
 	return strings.Join(*s, ",")
 }
 
 func (s *stringslice) Set(value string) error {
-	*s = append(*s, value)
+	if reset_peers {
+		*s = make([]string, 0)
+	}
+	reset_peers = false
+	peers := strings.Split(value, ",")
+	for _, peer := range(peers) {
+		*s = append(*s, peer)
+	}
 	return nil
 }
 
+type EnvEquiv struct {
+	Env string
+	Flag string
+}
+
+type EquivList []EnvEquiv
+
 func ParseEnvironment() {
-	var x string
-	x = os.Getenv("IF_ADDRESS")
-	if len(x) > 0 {
-		*eip = x
+
+	env_flags := EquivList{
+		EnvEquiv{Env: "IF_ADDRESS", Flag: "xi"},
+		EnvEquiv{Env: "IF_BIND_TO", Flag: "l"},
+		EnvEquiv{Env: "IF_DEAD_RATIO", Flag: "r"},
+		EnvEquiv{Env: "IF_ADVERTISEMENT_INTERVAL", Flag: "t"},
+		EnvEquiv{Env: "IF_HOST_PRIORITY", Flag: "P"},
+		EnvEquiv{Env: "IF_EXOSCALE_API_KEY", Flag: "xk"},
+		EnvEquiv{Env: "IF_EXOSCALE_API_SECRET", Flag: "xs"},
+		EnvEquiv{Env: "IF_EXOSCALE_API_ENDPOINT", Flag: "xe"},
+		EnvEquiv{Env: "IF_EXOSCALE_PEER_GROUP", Flag: "G"},
+		EnvEquiv{Env: "IF_EXOSCALE_PEERS", Flag: "p"},
 	}
 
-	x = os.Getenv("IF_BIND_TO")
-	if len(x) > 0 {
-		*address = x
-	}
-
-	x = os.Getenv("IF_DEAD_RATIO")
-	if len(x) > 0 {
-		i, err := strconv.Atoi(x)
-		if err == nil {
-			*dead_ratio = i
+	for _, env := range(env_flags) {
+		v := os.Getenv(env.Env)
+		if len(v) > 0 {
+			flag.Set(env.Flag, v)
 		}
 	}
 
-	x = os.Getenv("IF_ADVERTISEMENT_INTERVAL")
-	if len(x) > 0 {
-		i, err := strconv.Atoi(x)
-		if err == nil {
-			*timer = i
-		}
-	}
-
-	x = os.Getenv("IF_HOST_PRIORITY")
-	if len(x) > 0 {
-		i, err := strconv.Atoi(x)
-		if err == nil {
-			*prio = i
-		}
-	}
-
-	x = os.Getenv("IF_EXOSCALE_API_KEY")
-	if len(x) > 0 {
-		*exo_key = x
-	}
-	x = os.Getenv("IF_EXOSCALE_API_SECRET")
-	if len(x) > 0 {
-		*exo_secret = x
-	}
-	x = os.Getenv("IF_EXOSCALE_API_ENDPOINT")
-	if len(x) > 0 {
-		*exo_endpoint = x
-	}
-	x = os.Getenv("IF_EXOSCALE_PEER_GROUP")
-	if len(x) > 0 {
-		*exo_sg = x
-	}
-	x = os.Getenv("IF_EXOSCALE_PEERS")
-	if len(x) > 0 {
-		peers = strings.Split(x, ",")
-	}
+	reset_peers = true
 }
 
 func CheckConfiguration() {
 
 	die := false
+
+	if (*verbose) {
+		exoip.Verbose = true
+	}
+	if len(*eip) == 0 {
+		exoip.Logger.Crit("no Exoscale IP provided")
+		fmt.Fprintln(os.Stderr, "no Exoscale IP provided")
+		die = true
+	}
 	if len(peers) > 0 && len(*exo_sg) > 0 {
 		exoip.Logger.Crit("ambiguous peer definition (-p and -G given)")
 		fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
@@ -118,6 +111,27 @@ func CheckConfiguration() {
 	}
 	if die {
 		os.Exit(1)
+	}
+	if exoip.Verbose {
+		fmt.Printf("exoip will watch over: %s\n", *eip)
+		fmt.Printf("\tbind-address: %s\n", *address)
+		fmt.Printf("\thost-priority: %d\n", *prio)
+		fmt.Printf("\tadvertisement-interval: %d\n", *timer)
+		fmt.Printf("\tdead-ratio: %d\n", *dead_ratio)
+		fmt.Printf("\texoscale-api-key: %s\n", *exo_key)
+		fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exo_secret)[0:2])
+		fmt.Printf("\texoscale-api-endpoint: %s\n", *exo_endpoint)
+		if (len(*exo_sg) > 0) {
+			fmt.Printf("\texoscale-peer-group: %s\n", *exo_sg)
+		} else {
+			for _, p := range(peers) {
+				fmt.Printf("\tpeer: %s\n", p)
+			}
+		}
+	}
+
+	if (*validate_config) {
+		os.Exit(0)
 	}
 }
 
