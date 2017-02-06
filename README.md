@@ -17,7 +17,7 @@ least two peers will participate in the election process.
 and to some extent
 [VRRP](http://en.wikipedia.org/wiki/Virtual_Router_Redundancy_Protocol).
 
-The idea is quite simple, for each of it's configured peers, **exoip**
+The idea is quite simple: for each of its configured peers, **exoip**
 sends a 24-byte payload through **UDP**. The payload consists of a
 protocol version, a (repeated, for error checking) priority to help
 elect masters, the *Elastic IP* that must be shared accross alll
