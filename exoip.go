@@ -40,6 +40,10 @@ func main() {
 
 	ego := egoscale.NewClient(*exo_endpoint, *exo_key, *exo_secret)
 	if (len(*exo_sg) > 0) {
+		if len(peers) > 0 {
+			fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
+			os.Exit(1)
+		}
 		sgpeers, err := exoip.GetSecurityGroupPeers(ego, *exo_sg)
 		if err != nil {
 			exoip.Logger.Crit("cannot build peer list from security-group")
