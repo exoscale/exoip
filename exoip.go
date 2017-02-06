@@ -5,6 +5,7 @@ import (
 	"os"
 	"fmt"
 	"strings"
+	"strconv"
 	"exoip"
 	"github.com/pyr/egoscale/src/egoscale"
 )
@@ -31,12 +32,107 @@ func (s *stringslice) Set(value string) error {
 	return nil
 }
 
+func ParseEnvironment() {
+	var x string
+	x = os.Getenv("IF_ADDRESS")
+	if len(x) > 0 {
+		*eip = x
+	}
+
+	x = os.Getenv("IF_BIND_TO")
+	if len(x) > 0 {
+		*address = x
+	}
+
+	x = os.Getenv("IF_DEAD_RATIO")
+	if len(x) > 0 {
+		i, err := strconv.Atoi(x)
+		if err == nil {
+			*dead_ratio = i
+		}
+	}
+
+	x = os.Getenv("IF_ADVERTISEMENT_INTERVAL")
+	if len(x) > 0 {
+		i, err := strconv.Atoi(x)
+		if err == nil {
+			*timer = i
+		}
+	}
+
+	x = os.Getenv("IF_HOST_PRIORITY")
+	if len(x) > 0 {
+		i, err := strconv.Atoi(x)
+		if err == nil {
+			*prio = i
+		}
+	}
+
+	x = os.Getenv("IF_EXOSCALE_API_KEY")
+	if len(x) > 0 {
+		*exo_key = x
+	}
+	x = os.Getenv("IF_EXOSCALE_API_SECRET")
+	if len(x) > 0 {
+		*exo_secret = x
+	}
+	x = os.Getenv("IF_EXOSCALE_API_ENDPOINT")
+	if len(x) > 0 {
+		*exo_endpoint = x
+	}
+	x = os.Getenv("IF_EXOSCALE_PEER_GROUP")
+	if len(x) > 0 {
+		*exo_sg = x
+	}
+	x = os.Getenv("IF_EXOSCALE_PEERS")
+	if len(x) > 0 {
+		peers = strings.Split(x, ",")
+	}
+}
+
+func CheckConfiguration() {
+
+	die := false
+	if len(peers) > 0 && len(*exo_sg) > 0 {
+		exoip.Logger.Crit("ambiguous peer definition (-p and -G given)")
+		fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
+		die = true
+	}
+
+	if len(peers) == 0 && len(*exo_sg) == 0 {
+		exoip.Logger.Crit("need peer definition (either -p or -G)")
+		fmt.Fprintln(os.Stderr, "need peer definition (either -p or -G)")
+		die = true
+	}
+
+	if *prio < 0 || *prio > 255 {
+		exoip.Logger.Crit("invalid host priority (must be 0-255)")
+		fmt.Fprintln(os.Stderr, "invalid host priority (must be 0-255)")
+		die = true
+	}
+
+	if len(*exo_key) == 0 || len(*exo_endpoint) == 0 || len(*exo_secret) == 0 {
+		exoip.Logger.Crit("insufficient API credentials")
+		fmt.Fprintln(os.Stderr, "insufficient API credentials")
+		die = true
+	}
+	if die {
+		os.Exit(1)
+	}
+}
+
 func main() {
 
-	flag.Var(&peers, "p", "peers to communicate with")
-	flag.Parse()
-	exoip.SetupLogger()
 	var engine *exoip.Engine
+
+	flag.Var(&peers, "p", "peers to communicate with")
+
+	ParseEnvironment()
+	flag.Parse()
+
+	// Sanity Checks
+	exoip.SetupLogger()
+	CheckConfiguration()
 
 	ego := egoscale.NewClient(*exo_endpoint, *exo_key, *exo_secret)
 	if (len(*exo_sg) > 0) {
