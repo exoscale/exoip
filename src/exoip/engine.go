@@ -28,7 +28,7 @@ func remove_dash(r rune) rune {
 func StrToUUID(ustr string) ([]byte, error) {
 
 	if (len(ustr) != 36) {
-		return nil, errors.New("NicId has wrong length")
+		return nil, fmt.Errorf("NicId %s has wrong length", ustr)
 	}
 
 	ustr = strings.ToLower(ustr)

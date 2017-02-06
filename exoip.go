@@ -121,11 +121,23 @@ func CheckConfiguration() {
 		fmt.Printf("\texoscale-api-key: %s\n", *exo_key)
 		fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exo_secret)[0:2])
 		fmt.Printf("\texoscale-api-endpoint: %s\n", *exo_endpoint)
+
+		exoip.Logger.Info(fmt.Sprintf("exoip will watch over: %s\n", *eip))
+		exoip.Logger.Info(fmt.Sprintf("\tbind-address: %s\n", *address))
+		exoip.Logger.Info(fmt.Sprintf("\thost-priority: %d\n", *prio))
+		exoip.Logger.Info(fmt.Sprintf("\tadvertisement-interval: %d\n", *timer))
+		exoip.Logger.Info(fmt.Sprintf("\tdead-ratio: %d\n", *dead_ratio))
+		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-key: %s\n", *exo_key))
+		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-secret: %sXXXX\n", (*exo_secret)[0:2]))
+		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-endpoint: %s\n", *exo_endpoint))
+
 		if (len(*exo_sg) > 0) {
 			fmt.Printf("\texoscale-peer-group: %s\n", *exo_sg)
+			exoip.Logger.Info(fmt.Sprintf("\texoscale-peer-group: %s\n", *exo_sg))
 		} else {
 			for _, p := range(peers) {
 				fmt.Printf("\tpeer: %s\n", p)
+				exoip.Logger.Info(fmt.Sprintf("\tpeer: %s\n", p))
 			}
 		}
 	}
