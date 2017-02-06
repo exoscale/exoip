@@ -11,6 +11,7 @@ import (
 	"github.com/pyr/egoscale/src/egoscale"
 )
 
+const DefaultPort = 12345
 const ProtoVersion = "0201"
 const SkewMillis = 100
 const Skew time.Duration = 100 * time.Millisecond

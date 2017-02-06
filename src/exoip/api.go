@@ -2,6 +2,7 @@ package exoip
 
 import (
 	"errors"
+	"fmt"
 	"github.com/pyr/egoscale/src/egoscale"
 
 )
@@ -35,4 +36,35 @@ func (engine *Engine) ReleaseNic(nic_id string) {
 	if err != nil {
 		Logger.Crit("could not remove ip from nic")
 	}
+}
+
+func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
+
+	for _, sg := range(vm.SecurityGroups) {
+		if sg.Name == sgname {
+			return true
+		}
+	}
+	return false
+}
+
+func GetSecurityGroupPeers(ego *egoscale.Client, sgname string) ([]string, error) {
+
+	peers := make([]string, 0)
+	vms, err := ego.ListVirtualMachines()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, vm := range(vms) {
+		if VMHasSecurityGroup(vm, sgname) {
+			primary_ip := vm.Nic[0].Ipaddress
+			peers = append(peers, fmt.Sprintf("%s:%d", primary_ip, DefaultPort))
+		}
+	}
+
+	for _, p := range(peers) {
+		fmt.Println("found peer:", p)
+	}
+	return peers, nil
 }
