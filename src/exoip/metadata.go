@@ -4,10 +4,24 @@ import (
 	"io/ioutil"
 	"fmt"
 	"net/http"
+	"os/exec"
+	"strings"
 )
 
 func FindMetadataServer() (string, error) {
-	return "159.100.241.1", nil
+
+	out, err :=  exec.Command("ip", "route", "list").Output()
+	if err != nil {
+		fmt.Println("could not execute:", err)
+	}
+	lines := strings.Split(string(out), "\n")
+	for _, line := range(lines) {
+		if strings.HasPrefix(line, "default via ") {
+			params := strings.Split(line, " ")
+			return params[2], nil
+		}
+	}
+	return "", fmt.Errorf("could not find metadata server")
 }
 
 func FetchMetadata(mserver string, path string) (string, error) {

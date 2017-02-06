@@ -8,19 +8,12 @@ import (
 
 func NewPeer(ego *egoscale.Client, peer string) *Peer {
 	addr, err := net.ResolveUDPAddr("udp", peer)
-	if err != nil {
-		panic(err)
-	}
-
+	AssertSuccess(err)
 	ip := addr.IP
 	conn, err := net.DialUDP("udp", nil, addr)
-	if err != nil {
-		panic(err)
-	}
+	AssertSuccess(err)
 	peer_nic, err := FindPeerNic(ego, ip.String())
-	if err != nil {
-		panic(err)
-	}
+	AssertSuccess(err)
 	return &Peer{IP: ip, NicId: peer_nic, LastSeen: 0, Conn: conn, Dead: false,}
 }
 

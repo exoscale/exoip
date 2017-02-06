@@ -65,28 +65,23 @@ func NewEngine(client *egoscale.Client, ip string, interval int,
 	prio int, dead_ratio int, peers []string) *Engine {
 
 	mserver, err := FindMetadataServer()
-	if err != nil {
-		panic(err)
-	}
+	AssertSuccess(err)
 	nicid, err := FetchMyNic(client, mserver)
 	uuidbuf, err := StrToUUID(nicid)
-	if err != nil {
-		panic(err)
-	}
-
+	AssertSuccess(err)
 	sendbuf := make([]byte, 24)
 	protobuf, err := hex.DecodeString(ProtoVersion)
-	if err != nil {
-		panic(err)
-	}
+	AssertSuccess(err)
 	netip := net.ParseIP(ip)
 	if netip == nil {
-		Logger.Crit("could not parse IP")
+		Logger.Crit("Could not parse IP")
+		fmt.Fprintln(os.Stderr, "Could not parse IP")
 		os.Exit(1)
 	}
 	netip = netip.To4()
 	if netip == nil {
 		Logger.Crit("Unsupported IPv6 Address")
+		fmt.Fprintln(os.Stderr, "Unsupported IPv6 Address")
 		os.Exit(1)
 	}
 
