@@ -45,8 +45,10 @@ the configured *Elastic IP Address*.
     	Cluster ID advertised (default 10)
     -l string
     	Address to bind to (default ":12345")
-    -p value
-    	peers to communicate with
+    -p string
+    	peers to communicate with (may be repeated)
+	-G string
+	    Security-Group to build peer list from
     -r int
     	Dead ratio (default 3)
     -t int
@@ -55,8 +57,6 @@ the configured *Elastic IP Address*.
 	    Exoscale Elastic IP to watch over
     -xk string
     	Exoscale API Key
-    -xn string
-    	Exoscale NIC ID
     -xs string
     	Exoscale API Secret
 
