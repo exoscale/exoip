@@ -1,4 +1,4 @@
-VERSION=0.3.0-snapshot
+VERSION=0.3.0
 PREFIX?=/usr/local
 GOPATH=$(PWD)/build:$(PWD)
 PROGRAM=exoip
