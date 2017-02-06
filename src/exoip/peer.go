@@ -3,9 +3,10 @@ package exoip
 import (
 	"fmt"
 	"net"
+	"github.com/pyr/egoscale/src/egoscale"
 )
 
-func NewPeer(peer string) *Peer {
+func NewPeer(ego *egoscale.Client, peer string) *Peer {
 	addr, err := net.ResolveUDPAddr("udp", peer)
 	if err != nil {
 		panic(err)
@@ -16,7 +17,11 @@ func NewPeer(peer string) *Peer {
 	if err != nil {
 		panic(err)
 	}
-	return &Peer{IP: ip, LastSeen: 0, Conn: conn, Dead: false,}
+	peer_nic, err := FindPeerNic(ego, ip.String())
+	if err != nil {
+		panic(err)
+	}
+	return &Peer{IP: ip, NicId: peer_nic, LastSeen: 0, Conn: conn, Dead: false,}
 }
 
 func (engine *Engine) FindPeer(addr net.UDPAddr) *Peer {

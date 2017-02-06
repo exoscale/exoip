@@ -118,7 +118,7 @@ func NewEngine(client *egoscale.Client, ip string, interval int,
 		InitHoldOff: CurrentTimeMillis() + (1000 * int64(dead_ratio) * int64(interval)) + SkewMillis,
 	}
 	for _, p := range(peers) {
-		engine.Peers = append(engine.Peers, NewPeer(p))
+		engine.Peers = append(engine.Peers, NewPeer(client, p))
 	}
 	return &engine
 }

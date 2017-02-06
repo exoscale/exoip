@@ -27,15 +27,46 @@ func (engine *Engine) ObtainNic(nic_id string) {
 
 	_, err := engine.Exo.AddIpToNic(nic_id, engine.ExoIP.String())
 	if err != nil {
-		Logger.Crit("could not add ip to nic")
+		Logger.Crit(fmt.Sprintf("could not add ip %s to nic %s: %s",
+			engine.ExoIP.String(),
+			nic_id,
+			err))
+		return
 	}
+	Logger.Info(fmt.Sprintf("claimed ip %s on nic %s", engine.ExoIP.String(), nic_id))
 }
 
 func (engine *Engine) ReleaseNic(nic_id string) {
-	_, err := engine.Exo.RemoveIpFromNic(nic_id)
+
+	vms, err := engine.Exo.ListVirtualMachines()
 	if err != nil {
-		Logger.Crit("could not remove ip from nic")
+		Logger.Crit(fmt.Sprintf("could not remove ip from nic: could not list virtualmachines: %s",
+			err))
+		return
 	}
+
+	nic_address_id := ""
+	for _, vm := range(vms) {
+		if vm.Nic[0].Id == nic_id {
+			for _, sec_ip := range(vm.Nic[0].Secondaryip) {
+				if sec_ip.IpAddress == engine.ExoIP.String() {
+					nic_address_id = sec_ip.Id
+				}
+			}
+		}
+	}
+
+	if len(nic_address_id) == 0 {
+		Logger.Warning("could not remove ip from nic: unknown association")
+		return
+	}
+
+	_, err = engine.Exo.RemoveIpFromNic(nic_address_id)
+	if err != nil {
+		Logger.Crit(fmt.Sprintf("could not remove ip from nic %s (%s): %s",
+			nic_id, nic_address_id, err))
+	}
+	Logger.Info(fmt.Sprintf("released ip %s from nic %s", engine.ExoIP.String(), nic_id))
 }
 
 func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
@@ -63,8 +94,22 @@ func GetSecurityGroupPeers(ego *egoscale.Client, sgname string) ([]string, error
 		}
 	}
 
-	for _, p := range(peers) {
-		fmt.Println("found peer:", p)
-	}
 	return peers, nil
+}
+
+func FindPeerNic(ego *egoscale.Client, ip string) (string, error) {
+
+	vms, err := ego.ListVirtualMachines()
+	if err != nil {
+		return "", err
+	}
+
+	for _, vm := range(vms) {
+
+		if vm.Nic[0].Ipaddress == ip {
+			return vm.Nic[0].Id, nil
+		}
+	}
+
+	return "", fmt.Errorf("cannot find nic")
 }

@@ -54,6 +54,7 @@ func main() {
 	} else {
 		engine = exoip.NewEngine(ego, *eip, *timer, *prio, *dead_ratio, peers)
 	}
+	exoip.Logger.Info("starting up")
 	go engine.NetworkAdvertise()
 	engine.NetworkLoop(*address)
 
