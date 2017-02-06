@@ -37,27 +37,26 @@ the configured *Elastic IP Address*.
 
 ## Configuration
 
-**exoip** is configured through command line arguments.
+**exoip** is configured through command line arguments or an equivalent
+environment variable:
 
-    -P int
-    	Host priority (lowest wins) (default 10)
-    -i int
-    	Cluster ID advertised (default 10)
-    -l string
+    -P int (or IF_HOST_PRIORITY)
+    	Host priority (lowest wins) (default 10, maximum 255)
+    -l string (or IF_BIND_ADDRESS)
     	Address to bind to (default ":12345")
-    -p string
-    	peers to communicate with (may be repeated)
-	-G string
+    -p string (or IF_EXOSCALE_PEERS)
+    	peers to communicate with (may be repeated and/or comma-separated)
+	-G string (or IF_EXOSCALE_PEER_GROUP)
 	    Security-Group to build peer list from
-    -r int
+    -r int (or IF_DEAD_RATIO)
     	Dead ratio (default 3)
-    -t int
+    -t int (or IF_ADVERTISEMENT_INTERVAL)
     	Advertisement interval in seconds (default 1)
-    -xi string
+    -xi string (or IF_ADDRESS)
 	    Exoscale Elastic IP to watch over
-    -xk string
+    -xk string (or IF_EXOSCALE_API_KEY)
     	Exoscale API Key
-    -xs string
+    -xs string (or IF_EXOSCALE_API_SECRET)
     	Exoscale API Secret
 
 ## Building
