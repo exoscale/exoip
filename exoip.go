@@ -96,8 +96,9 @@ func CheckConfiguration() {
 	}
 
 	if i != 1 {
-		fmt.Printf("need exactly one of -A, -D, or -W")
+		fmt.Fprintln(os.Stderr, "need exactly one of -A, -D, or -W")
 		exoip.Logger.Info(fmt.Sprintf("invalid mode: need exactly one of -A, -D, or -W"))
+		die = true
 	}
 
 	if len(*eip) == 0 {
