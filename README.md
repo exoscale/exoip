@@ -5,6 +5,12 @@ exoip: heartbeat monitor for Exoscale Elastic IP Addresses
 Exoscale Elastic IP Addresses and performing state transitions much
 easier.
 
+**exoip** can run in one of three modes:
+
+- *Association Mode*: associates an EIP with an instance and exit.
+- *Dissociation Mode*: dissociates an EIP from an instance and exit.
+- *Watchdog Mode*: watches for peer liveness and handle necessary state transitions.
+
 ## Watchdog protocol
 
 The goal of **exoip** is to assert liveness of peers participating in
@@ -40,6 +46,12 @@ the configured *Elastic IP Address*.
 **exoip** is configured through command line arguments or an equivalent
 environment variable:
 
+    -A
+	    Association mode (exclusive with -D and -W)
+    -D
+	    Dissociation mode (exclusive with -A and -W)
+    -W
+	    Watchdog mode (exclusive with -A and -D)
     -P int (or IF_HOST_PRIORITY)
     	Host priority (lowest wins) (default 10, maximum 255)
     -l string (or IF_BIND_ADDRESS)
