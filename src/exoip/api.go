@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pyr/egoscale/src/egoscale"
-
+	"os"
 )
 
 func FetchMyNic(ego *egoscale.Client, mserver string) (string, error) {
@@ -21,6 +21,25 @@ func FetchMyNic(ego *egoscale.Client, mserver string) (string, error) {
 		return "", errors.New("cannot find virtual machine Nic ID")
 	}
 	return vm_info.Nic[0].Id, nil
+}
+
+func (engine *Engine) FetchNicAndVm() {
+
+	mserver, err := FindMetadataServer()
+	AssertSuccess(err)
+	instance_id, err := FetchMetadata(mserver, "/latest/instance-id")
+	AssertSuccess(err)
+
+	vm_info, err := engine.Exo.GetVirtualMachine(instance_id)
+	AssertSuccess(err)
+
+	if len(vm_info.Nic) < 1 {
+		Logger.Crit("cannot find virtual machine Nic ID")
+		fmt.Fprintln(os.Stderr, "cannot find virtual machine Nic ID")
+		os.Exit(1)
+	}
+	engine.ExoVM = vm_info.Id
+	engine.NicId = vm_info.Nic[0].Id
 }
 
 func (engine *Engine) ObtainNic(nic_id string) error {

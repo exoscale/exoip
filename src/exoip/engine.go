@@ -122,10 +122,6 @@ func NewWatchdogEngine(client *egoscale.Client, ip string, interval int,
 
 func NewEngine(client *egoscale.Client, ip string) *Engine {
 
-	mserver, err := FindMetadataServer()
-	AssertSuccess(err)
-	nicid, err := FetchMyNic(client, mserver)
-	AssertSuccess(err)
 
 	netip := net.ParseIP(ip)
 	if netip == nil {
@@ -141,9 +137,9 @@ func NewEngine(client *egoscale.Client, ip string) *Engine {
 	}
 
 	engine := Engine{
-		NicId: nicid,
 		ExoIP: netip,
 		Exo: client,
 	}
+	engine.FetchNicAndVm()
 	return &engine
 }
