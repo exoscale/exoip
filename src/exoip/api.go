@@ -23,7 +23,7 @@ func FetchMyNic(ego *egoscale.Client, mserver string) (string, error) {
 	return vm_info.Nic[0].Id, nil
 }
 
-func (engine *Engine) ObtainNic(nic_id string) {
+func (engine *Engine) ObtainNic(nic_id string) error {
 
 	_, err := engine.Exo.AddIpToNic(nic_id, engine.ExoIP.String())
 	if err != nil {
@@ -31,12 +31,42 @@ func (engine *Engine) ObtainNic(nic_id string) {
 			engine.ExoIP.String(),
 			nic_id,
 			err))
-		return
+		return err
 	}
 	Logger.Info(fmt.Sprintf("claimed ip %s on nic %s", engine.ExoIP.String(), nic_id))
+	return nil
 }
 
-func (engine *Engine) ReleaseNic(nic_id string) {
+func (engine *Engine) ReleaseMyNic() error {
+	vm, err := engine.Exo.GetVirtualMachine(engine.ExoVM)
+	if err != nil {
+		Logger.Crit(fmt.Sprintf("could not remove ip from nic: could get virtualmachine: %s",
+			err))
+		return err
+	}
+	nic_address_id := ""
+	for _, sec_ip := range(vm.Nic[0].Secondaryip) {
+		if sec_ip.IpAddress == engine.ExoIP.String() {
+			nic_address_id = sec_ip.Id
+			break
+		}
+	}
+	if len(nic_address_id) == 0 {
+		Logger.Warning("could not remove ip from nic: unknown association")
+		return fmt.Errorf("could not remove ip from nic: unknown association")
+	}
+
+	_, err = engine.Exo.RemoveIpFromNic(nic_address_id)
+	if err != nil {
+		Logger.Crit(fmt.Sprintf("could not dissociate ip %s: %s",
+			engine.ExoIP.String(), err))
+		return err
+	}
+	Logger.Info(fmt.Sprintf("released ip %s", engine.ExoIP.String()))
+	return nil
+}
+
+func (engine *Engine) ReleaseNic(nic_id string)  {
 
 	vms, err := engine.Exo.ListVirtualMachines()
 	if err != nil {
@@ -51,6 +81,7 @@ func (engine *Engine) ReleaseNic(nic_id string) {
 			for _, sec_ip := range(vm.Nic[0].Secondaryip) {
 				if sec_ip.IpAddress == engine.ExoIP.String() {
 					nic_address_id = sec_ip.Id
+					break
 				}
 			}
 		}

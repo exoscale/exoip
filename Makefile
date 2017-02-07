@@ -27,6 +27,9 @@ clean:
 	$(RM) $(PROGRAM)
 	$(GO) clean
 
+signature: all
+	gpg -a --sign -u ops@exoscale.ch --detach exoip
+
 cleandeps: clean
 	$(RM) -r $(PWD)/build
 

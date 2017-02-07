@@ -63,7 +63,7 @@ func UUIDToStr(uuidbuf []byte) string {
 	return hexuuid
 }
 
-func NewEngine(client *egoscale.Client, ip string, interval int,
+func NewWatchdogEngine(client *egoscale.Client, ip string, interval int,
 	prio int, dead_ratio int, peers []string) *Engine {
 
 	mserver, err := FindMetadataServer()
@@ -116,6 +116,34 @@ func NewEngine(client *egoscale.Client, ip string, interval int,
 	}
 	for _, p := range(peers) {
 		engine.Peers = append(engine.Peers, NewPeer(client, p))
+	}
+	return &engine
+}
+
+func NewEngine(client *egoscale.Client, ip string) *Engine {
+
+	mserver, err := FindMetadataServer()
+	AssertSuccess(err)
+	nicid, err := FetchMyNic(client, mserver)
+	AssertSuccess(err)
+
+	netip := net.ParseIP(ip)
+	if netip == nil {
+		Logger.Crit("Could not parse IP")
+		fmt.Fprintln(os.Stderr, "Could not parse IP")
+		os.Exit(1)
+	}
+	netip = netip.To4()
+	if netip == nil {
+		Logger.Crit("Unsupported IPv6 Address")
+		fmt.Fprintln(os.Stderr, "Unsupported IPv6 Address")
+		os.Exit(1)
+	}
+
+	engine := Engine{
+		NicId: nicid,
+		ExoIP: netip,
+		Exo: client,
 	}
 	return &engine
 }
