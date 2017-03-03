@@ -26,7 +26,7 @@ var validate_config = flag.Bool("n", false, "Validate configuration and exit")
 var watch_mode = flag.Bool("W", false, "Watchdog mode")
 var associate_mode = flag.Bool("A", false, "Associate EIP and exit")
 var dissociate_mode = flag.Bool("D", false, "Dissociate EIP and exit")
-var log_stdout = flag.Bool("O", false, "Do not log to syslog, use standar output/error")
+var log_stdout = flag.Bool("O", false, "Do not log to syslog, use standard output")
 var peers stringslice
 var reset_peers bool = false
 
