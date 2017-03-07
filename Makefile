@@ -18,17 +18,24 @@ RM?=rm -f
 LN=ln -s
 MAIN=exoip.go
 
-all: $(PROGRAM)
+all: $(PROGRAM) static
 
 $(PROGRAM): $(MAIN) $(SRCS)
 	$(GO) build -o $(PROGRAM) $(MAIN)
 
+static: $(PROGRAM)
+	env CGO_ENABLED=0 GOOS=linux $(GO) build -ldflags "-s" -o $(PROGRAM)-static $(MAIN)
+
 clean:
 	$(RM) $(PROGRAM)
+	$(RM) $(PROGRAM)-static
+	$(RM) $(PROGRAM).asc
+	$(RM) $(PROGRAM)-static.asc
 	$(GO) clean
 
 signature: all
 	gpg -a --sign -u ops@exoscale.ch --detach exoip
+	gpg -a --sign -u ops@exoscale.ch --detach exoip-static
 
 cleandeps: clean
 	$(RM) -r $(PWD)/build
