@@ -3,7 +3,7 @@ package exoip
 import (
 	"fmt"
 	"net"
-	"github.com/pyr/egoscale/src/egoscale"
+	"github.com/exoscale/egoscale/src/egoscale"
 )
 
 func NewPeer(ego *egoscale.Client, peer string) *Peer {

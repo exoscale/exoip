@@ -2,7 +2,7 @@ package exoip
 
 import (
 	"net"
-	"github.com/pyr/egoscale/src/egoscale"
+	"github.com/exoscale/egoscale/src/egoscale"
 
 )
 

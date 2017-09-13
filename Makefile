@@ -41,4 +41,4 @@ cleandeps: clean
 	$(RM) -r $(PWD)/build
 
 deps:
-	$(GO) get github.com/pyr/egoscale/src/egoscale
+	$(GO) get github.com/exoscale/egoscale/src/egoscale

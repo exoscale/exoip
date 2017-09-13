@@ -8,7 +8,7 @@ import (
 	"net"
 	"encoding/hex"
 	"os"
-	"github.com/pyr/egoscale/src/egoscale"
+	"github.com/exoscale/egoscale/src/egoscale"
 )
 
 const DefaultPort = 12345
