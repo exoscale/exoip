@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"exoip"
-	"github.com/exoscale/egoscale/src/egoscale"
+	"github.com/exoscale/egoscale"
 )
 
 type stringslice []string

@@ -3,7 +3,7 @@ package exoip
 import (
 	"errors"
 	"fmt"
-	"github.com/exoscale/egoscale/src/egoscale"
+	"github.com/exoscale/egoscale"
 	"os"
 )
 
