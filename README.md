@@ -31,12 +31,12 @@ peers, and the peer's Nic ID.
 
 The layout of the payload is as follows:
 
-      2bytes 2bytes  4bytes           16bytes
+      2bytes  2bytes  4 bytes         16 bytes
     +-------+-------+---------------+-------------------------------+
-	| PROTO | PRIO  |    EIP        |   NicID (128bit UUID)         |
-	+-------+-------+---------------+-------------------------------+
+    | PROTO | PRIO  |    EIP        |   NicID (128bit UUID)         |
+    +-------+-------+---------------+-------------------------------+
 
-	
+
 When a peer fails to advertise for a configurable period of time, it
 is considered dead and action is taken to reclaim its ownership of
 the configured *Elastic IP Address*.
@@ -47,29 +47,29 @@ the configured *Elastic IP Address*.
 environment variable:
 
     -A
-	    Association mode (exclusive with -D and -W)
+        Association mode (exclusive with -D and -W)
     -D
-	    Dissociation mode (exclusive with -A and -W)
+        Dissociation mode (exclusive with -A and -W)
     -W
-	    Watchdog mode (exclusive with -A and -D)
+        Watchdog mode (exclusive with -A and -D)
     -P int (or IF_HOST_PRIORITY)
-    	Host priority (lowest wins) (default 10, maximum 255)
+        Host priority (lowest wins) (default 10, maximum 255)
     -l string (or IF_BIND_ADDRESS)
-    	Address to bind to (default ":12345")
+        Address to bind to (default ":12345")
     -p string (or IF_EXOSCALE_PEERS)
-    	peers to communicate with (may be repeated and/or comma-separated)
-	-G string (or IF_EXOSCALE_PEER_GROUP)
-	    Security-Group to build peer list from
+        peers to communicate with (may be repeated and/or comma-separated)
+    -G string (or IF_EXOSCALE_PEER_GROUP)
+        Security-Group to build peer list from
     -r int (or IF_DEAD_RATIO)
-    	Dead ratio (default 3)
+        Dead ratio (default 3)
     -t int (or IF_ADVERTISEMENT_INTERVAL)
-    	Advertisement interval in seconds (default 1)
+        Advertisement interval in seconds (default 1)
     -xi string (or IF_ADDRESS)
-	    Exoscale Elastic IP to watch over
+        Exoscale Elastic IP to watch over
     -xk string (or IF_EXOSCALE_API_KEY)
-    	Exoscale API Key
+        Exoscale API Key
     -xs string (or IF_EXOSCALE_API_SECRET)
-    	Exoscale API Secret
+        Exoscale API Secret
 
 ## Building
 
@@ -78,6 +78,4 @@ by cloning [this repository](https://github.com/exoscale/exoip) and
 peforming the following steps:
 
     make deps
-	make
-	
-	
+    make
