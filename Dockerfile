@@ -1,15 +1,16 @@
-FROM alpine:3.3
+FROM golang:1.9-alpine
+RUN mkdir -p /app
+ADD . /app
+WORKDIR /app
 
-RUN mkdir -p /tmp/src
-ADD . /tmp/src
+RUN apk --no-cache \
+        --update add \
+        --virtual build-dependencies \
+        make git \
+ && cd /app \
+ && make deps \
+ && make
 
-RUN apk --no-cache --update add --virtual build-dependencies \
-      go make git \
-    && cd /tmp/src \
-    && make deps \
-    && make \
-    && cp exoip /usr/local/bin/exoip \
-    && rm -r /tmp/src \
-    && apk del build-dependencies
-
-ENTRYPOINT ["/usr/local/bin/exoip", "-O"]
+FROM linuxkit/ca-certificates:de21b84d9b055ad9dcecc57965b654a7a24ef8e0
+COPY --from=0 /app/exoip .
+ENTRYPOINT ["./app", "-O"]
