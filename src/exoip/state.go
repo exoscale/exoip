@@ -42,7 +42,7 @@ func (engine *Engine) CheckState() {
 	dead_peers := make([]*Peer, 0)
 	best_advertisement := true
 
-	for _, peer := range(engine.Peers) {
+	for _, peer := range engine.Peers {
 		if engine.PeerIsNewlyDead(now, peer) {
 			dead_peers = append(dead_peers, peer)
 		} else {
@@ -58,7 +58,7 @@ func (engine *Engine) CheckState() {
 		engine.PerformStateTransition(StateMaster)
 	}
 
-	for _, peer := range(dead_peers) {
+	for _, peer := range dead_peers {
 		engine.HandleDeadPeer(peer)
 	}
 }

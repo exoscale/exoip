@@ -1,11 +1,11 @@
 package exoip
 
 import (
-	"errors"
 	"encoding/hex"
+	"errors"
 	"net"
-	"time"
 	"os"
+	"time"
 )
 
 func BufToPayload(buf []byte) (*Payload, error) {
@@ -30,7 +30,7 @@ func BufToPayload(buf []byte) (*Payload, error) {
 }
 
 func (engine *Engine) NetworkLoop(listen_address string) error {
-	ServerAddr,err := net.ResolveUDPAddr("udp", listen_address)
+	ServerAddr, err := net.ResolveUDPAddr("udp", listen_address)
 	AssertSuccess(err)
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
 	AssertSuccess(err)
@@ -59,7 +59,7 @@ func (engine *Engine) NetworkAdvertise() {
 	for {
 		time.Sleep(time.Duration(engine.Interval) * time.Second)
 		go func() {
-			for _, peer := range(engine.Peers) {
+			for _, peer := range engine.Peers {
 				/* do not account for errors */
 				peer.Conn.Write(engine.SendBuf)
 			}
