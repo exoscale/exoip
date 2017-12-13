@@ -1,6 +1,8 @@
 exoip: heartbeat monitor for Exoscale Elastic IP Addresses
 ==========================================================
 
+[![Build Status](https://travis-ci.org/exoscale/exoip.svg?branch=master)](https://travis-ci.org/exoscale/exoip)
+
 **exoip** is a small tool meant to make the process of watching
 Exoscale Elastic IP Addresses and performing state transitions much
 easier.
