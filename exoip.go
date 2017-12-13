@@ -1,16 +1,16 @@
 package main
 
 import (
-	"flag"
-	"os"
-	"fmt"
-	"strings"
 	"exoip"
+	"flag"
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/exoscale/egoscale"
 )
 
 type stringslice []string
-
 
 var timer = flag.Int("t", 1, "Advertisement interval in seconds")
 var prio = flag.Int("P", 10, "Host priority (lowest wins)")
@@ -40,14 +40,14 @@ func (s *stringslice) Set(value string) error {
 	}
 	reset_peers = false
 	peers := strings.Split(value, ",")
-	for _, peer := range(peers) {
+	for _, peer := range peers {
 		*s = append(*s, peer)
 	}
 	return nil
 }
 
 type EnvEquiv struct {
-	Env string
+	Env  string
 	Flag string
 }
 
@@ -68,7 +68,7 @@ func ParseEnvironment() {
 		EnvEquiv{Env: "IF_EXOSCALE_PEERS", Flag: "p"},
 	}
 
-	for _, env := range(env_flags) {
+	for _, env := range env_flags {
 		v := os.Getenv(env.Env)
 		if len(v) > 0 {
 			flag.Set(env.Flag, v)
@@ -82,17 +82,17 @@ func CheckConfiguration() {
 
 	die := false
 
-	if (*verbose) {
+	if *verbose {
 		exoip.Verbose = true
 	}
 	i := 0
-	if (*watch_mode) {
+	if *watch_mode {
 		i++
 	}
-	if (*associate_mode) {
+	if *associate_mode {
 		i++
 	}
-	if (*dissociate_mode) {
+	if *dissociate_mode {
 		i++
 	}
 
@@ -114,7 +114,6 @@ func CheckConfiguration() {
 			fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
 			die = true
 		}
-
 
 		if len(peers) == 0 && len(*exo_sg) == 0 {
 			exoip.Logger.Crit("need peer definition (either -p or -G)")
@@ -156,19 +155,18 @@ func CheckConfiguration() {
 		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-secret: %sXXXX\n", (*exo_secret)[0:2]))
 		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-endpoint: %s\n", *exo_endpoint))
 
-		if (len(*exo_sg) > 0) {
+		if len(*exo_sg) > 0 {
 			fmt.Printf("\texoscale-peer-group: %s\n", *exo_sg)
 			exoip.Logger.Info(fmt.Sprintf("\texoscale-peer-group: %s\n", *exo_sg))
 		} else {
-			for _, p := range(peers) {
+			for _, p := range peers {
 				fmt.Printf("\tpeer: %s\n", p)
 				exoip.Logger.Info(fmt.Sprintf("\tpeer: %s\n", p))
 			}
 		}
 	}
 
-
-	if (*validate_config) {
+	if *validate_config {
 		os.Exit(0)
 	}
 }
@@ -187,7 +185,7 @@ func main() {
 	CheckConfiguration()
 
 	ego := egoscale.NewClient(*exo_endpoint, *exo_key, *exo_secret)
-	if (*associate_mode) {
+	if *associate_mode {
 		engine := exoip.NewEngine(ego, *eip)
 		if err := engine.ObtainNic(engine.NicId); err != nil {
 			fmt.Fprintf(os.Stderr, "%s", err)
@@ -196,7 +194,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if (*dissociate_mode) {
+	if *dissociate_mode {
 		engine := exoip.NewEngine(ego, *eip)
 		if err := engine.ReleaseMyNic(); err != nil {
 			fmt.Fprintf(os.Stderr, "%s", err)
@@ -205,7 +203,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if (len(*exo_sg) > 0) {
+	if len(*exo_sg) > 0 {
 		if len(peers) > 0 {
 			fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
 			os.Exit(1)

@@ -1,13 +1,14 @@
 package exoip
 
 import (
+	"encoding/hex"
 	"errors"
-	"time"
-	"strings"
 	"fmt"
 	"net"
-	"encoding/hex"
 	"os"
+	"strings"
+	"time"
+
 	"github.com/exoscale/egoscale"
 )
 
@@ -19,7 +20,7 @@ const Skew time.Duration = 100 * time.Millisecond
 var Verbose bool = false
 
 func remove_dash(r rune) rune {
-	if (r == '-') {
+	if r == '-' {
 		return -1
 	}
 	return r
@@ -27,20 +28,20 @@ func remove_dash(r rune) rune {
 
 func StrToUUID(ustr string) ([]byte, error) {
 
-	if (len(ustr) != 36) {
+	if len(ustr) != 36 {
 		return nil, fmt.Errorf("NicId %s has wrong length", ustr)
 	}
 
 	ustr = strings.ToLower(ustr)
-	for _, c := range(ustr) {
-		if (!(c >= 'a' && c <= 'f') &&
+	for _, c := range ustr {
+		if !(c >= 'a' && c <= 'f') &&
 			!(c >= '0' && c <= '9') &&
-			!(c == '-')) {
+			!(c == '-') {
 			return nil, errors.New("Bad characters in NicId")
 		}
 	}
 	ustr = strings.Map(remove_dash, ustr)
-	if (len(ustr) != 32) {
+	if len(ustr) != 32 {
 		return nil, errors.New("NicId has wrong length")
 	}
 
@@ -98,30 +99,29 @@ func NewWatchdogEngine(client *egoscale.Client, ip string, interval int,
 	sendbuf[6] = netbytes[2]
 	sendbuf[7] = netbytes[3]
 
-	for i, b := range(uuidbuf) {
+	for i, b := range uuidbuf {
 		sendbuf[i+8] = b
 	}
 
 	engine := Engine{
-		DeadRatio: dead_ratio,
-		Interval: interval,
-		Priority: sendbuf[2],
-		SendBuf: sendbuf,
-		Peers: make([]*Peer, 0),
-		State: StateBackup,
-		NicId: nicid,
-		ExoIP: netip,
-		Exo: client,
+		DeadRatio:   dead_ratio,
+		Interval:    interval,
+		Priority:    sendbuf[2],
+		SendBuf:     sendbuf,
+		Peers:       make([]*Peer, 0),
+		State:       StateBackup,
+		NicId:       nicid,
+		ExoIP:       netip,
+		Exo:         client,
 		InitHoldOff: CurrentTimeMillis() + (1000 * int64(dead_ratio) * int64(interval)) + SkewMillis,
 	}
-	for _, p := range(peers) {
+	for _, p := range peers {
 		engine.Peers = append(engine.Peers, NewPeer(client, p))
 	}
 	return &engine
 }
 
 func NewEngine(client *egoscale.Client, ip string) *Engine {
-
 
 	netip := net.ParseIP(ip)
 	if netip == nil {
@@ -138,7 +138,7 @@ func NewEngine(client *egoscale.Client, ip string) *Engine {
 
 	engine := Engine{
 		ExoIP: netip,
-		Exo: client,
+		Exo:   client,
 	}
 	engine.FetchNicAndVm()
 	return &engine

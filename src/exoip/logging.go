@@ -1,15 +1,15 @@
 package exoip
 
 import (
-	"os"
 	"log"
 	"log/syslog"
+	"os"
 )
 
 type WrappedLogger struct {
-	syslog bool
+	syslog        bool
 	syslog_writer *syslog.Writer
-	std_writer *log.Logger
+	std_writer    *log.Logger
 }
 
 var Logger *WrappedLogger
@@ -40,7 +40,7 @@ func (l *WrappedLogger) Info(msg string) {
 
 func SetupLogger(log_stdout bool) {
 
-	if (log_stdout) {
+	if log_stdout {
 		logger := log.New(os.Stdout, "exoip ", 0)
 		Logger = &WrappedLogger{syslog: false, std_writer: logger}
 	} else {

@@ -3,8 +3,9 @@ package exoip
 import (
 	"errors"
 	"fmt"
-	"github.com/exoscale/egoscale"
 	"os"
+
+	"github.com/exoscale/egoscale"
 )
 
 func FetchMyNic(ego *egoscale.Client, mserver string) (string, error) {
@@ -64,7 +65,7 @@ func (engine *Engine) ReleaseMyNic() error {
 		return err
 	}
 	nic_address_id := ""
-	for _, sec_ip := range(vm.Nic[0].Secondaryip) {
+	for _, sec_ip := range vm.Nic[0].Secondaryip {
 		if sec_ip.IpAddress == engine.ExoIP.String() {
 			nic_address_id = sec_ip.Id
 			break
@@ -85,7 +86,7 @@ func (engine *Engine) ReleaseMyNic() error {
 	return nil
 }
 
-func (engine *Engine) ReleaseNic(nic_id string)  {
+func (engine *Engine) ReleaseNic(nic_id string) {
 
 	vms, err := engine.Exo.ListVirtualMachines()
 	if err != nil {
@@ -95,9 +96,9 @@ func (engine *Engine) ReleaseNic(nic_id string)  {
 	}
 
 	nic_address_id := ""
-	for _, vm := range(vms) {
+	for _, vm := range vms {
 		if vm.Nic[0].Id == nic_id {
-			for _, sec_ip := range(vm.Nic[0].Secondaryip) {
+			for _, sec_ip := range vm.Nic[0].Secondaryip {
 				if sec_ip.IpAddress == engine.ExoIP.String() {
 					nic_address_id = sec_ip.Id
 					break
@@ -121,7 +122,7 @@ func (engine *Engine) ReleaseNic(nic_id string)  {
 
 func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
 
-	for _, sg := range(vm.SecurityGroups) {
+	for _, sg := range vm.SecurityGroups {
 		if sg.Name == sgname {
 			return true
 		}
@@ -137,7 +138,7 @@ func GetSecurityGroupPeers(ego *egoscale.Client, sgname string) ([]string, error
 		return nil, err
 	}
 
-	for _, vm := range(vms) {
+	for _, vm := range vms {
 		if VMHasSecurityGroup(vm, sgname) {
 			primary_ip := vm.Nic[0].Ipaddress
 			peers = append(peers, fmt.Sprintf("%s:%d", primary_ip, DefaultPort))
@@ -154,7 +155,7 @@ func FindPeerNic(ego *egoscale.Client, ip string) (string, error) {
 		return "", err
 	}
 
-	for _, vm := range(vms) {
+	for _, vm := range vms {
 
 		if vm.Nic[0].Ipaddress == ip {
 			return vm.Nic[0].Id, nil
