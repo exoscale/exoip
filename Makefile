@@ -1,5 +1,4 @@
 VERSION=0.3.3-snapshot
-GOPATH=$(PWD)
 PKG=exoip
 
 MAIN=cmd/$(PKG).go
@@ -13,6 +12,8 @@ BINS=\
 
 RM?=rm -f
 LN=ln -s
+
+GOPATH:=$(PWD)
 
 all: $(BIN)
 
