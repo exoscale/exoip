@@ -12,5 +12,5 @@ RUN apk --no-cache \
  && make
 
 FROM linuxkit/ca-certificates:de21b84d9b055ad9dcecc57965b654a7a24ef8e0
-COPY --from=0 /app/exoip .
+COPY --from=0 /app/build/exoip .
 ENTRYPOINT ["./exoip", "-O"]

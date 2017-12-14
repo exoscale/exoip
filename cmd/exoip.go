@@ -1,13 +1,13 @@
 package main
 
 import (
-	"exoip"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/exoscale/egoscale"
+	"github.com/exoscale/exoip"
 )
 
 type stringslice []string

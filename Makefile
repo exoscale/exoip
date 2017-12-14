@@ -1,44 +1,43 @@
 VERSION=0.3.3-snapshot
-PREFIX?=/usr/local
-GOPATH=$(PWD)/build:$(PWD)
-PROGRAM=exoip
-GO=env GOPATH=$(GOPATH) go
-SRCS=   src/exoip/network.go				\
-	src/exoip/engine.go				\
-	src/exoip/peer.go				\
-	src/exoip/time.go				\
-	src/exoip/state.go				\
-	src/exoip/api.go				\
-	src/exoip/metadata.go				\
-	src/exoip/assert.go				\
-	src/exoip/logging.go				\
-	src/exoip/types.go
+GOPATH=$(PWD)
+PKG=exoip
+
+MAIN=cmd/$(PKG).go
+SRCS=$(wildcard *.go)
+
+DEST=build
+BIN=$(DEST)/$(PKG)
+BINS=\
+		$(BIN)        \
+		$(BIN)-static
 
 RM?=rm -f
 LN=ln -s
-MAIN=exoip.go
 
-all: $(PROGRAM) static
+all: $(BIN)
 
-$(PROGRAM): $(MAIN) $(SRCS)
-	$(GO) build -o $(PROGRAM) $(MAIN)
+$(BIN): $(MAIN) $(SRCS)
+	go build -o $@ $<
 
-static: $(PROGRAM)
-	env CGO_ENABLED=0 GOOS=linux $(GO) build -ldflags "-s" -o $(PROGRAM)-static $(MAIN)
+$(BIN)-static: $(MAIN) $(SRCS)
+	CGO_ENABLED=0 GOOS=linux go build -ldflags "-s" -o $@ $<
 
 clean:
-	$(RM) $(PROGRAM)
-	$(RM) $(PROGRAM)-static
-	$(RM) $(PROGRAM).asc
-	$(RM) $(PROGRAM)-static.asc
-	$(GO) clean
+	$(RM) -r $(DEST)
+	go clean
 
-signature: all
-	gpg -a --sign -u ops@exoscale.ch --detach exoip
-	gpg -a --sign -u ops@exoscale.ch --detach exoip-static
+.PHONY: signature
+signature: $(BINS)
+	$(foreach bin,$^,\
+		$(RM) $(bin).asc; \
+		gpg -a --sign -u operations@exoscale.net --detach $(bin);)
 
+.PHONY: cleandeps
 cleandeps: clean
-	$(RM) -r $(PWD)/build
+	$(RM) -r src
 
+.PHONY: deps
 deps:
-	$(GO) get github.com/exoscale/egoscale
+	go get github.com/exoscale/egoscale
+	$(RM) src/github.com/exoscale/$(PKG)
+	$(LN) ../../../../$(PKG) src/github.com/exoscale/$(PKG)

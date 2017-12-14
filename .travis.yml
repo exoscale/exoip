@@ -10,8 +10,8 @@ go:
 cache: apt
 
 install:
-  - make deps
   - go get -u github.com/golang/lint/golint
+  - make deps
 
 script:
   - make

@@ -1,5 +1,4 @@
-/exoip.asc
-/exoip
-/exoip-static.asc
-/exoip-static
-/build
+bin
+build
+pkg
+src
