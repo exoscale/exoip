@@ -139,6 +139,10 @@ func NewEngine(client *egoscale.Client, ip string) *Engine {
 	engine := Engine{
 		ExoIP: netip,
 		Exo:   client,
+		AsyncInfo: egoscale.AsyncInfo{
+			Retries: 3,
+			Delay:   10,
+		},
 	}
 	engine.FetchNicAndVm()
 	return &engine

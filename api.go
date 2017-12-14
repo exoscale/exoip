@@ -45,7 +45,7 @@ func (engine *Engine) FetchNicAndVm() {
 
 func (engine *Engine) ObtainNic(nic_id string) error {
 
-	_, err := engine.Exo.AddIpToNic(nic_id, engine.ExoIP.String())
+	_, err := engine.Exo.AddIpToNic(nic_id, engine.ExoIP.String(), engine.AsyncInfo)
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not add ip %s to nic %s: %s",
 			engine.ExoIP.String(),
@@ -76,7 +76,7 @@ func (engine *Engine) ReleaseMyNic() error {
 		return fmt.Errorf("could not remove ip from nic: unknown association")
 	}
 
-	_, err = engine.Exo.RemoveIpFromNic(nic_address_id)
+	err = engine.Exo.RemoveIpFromNic(nic_address_id, engine.AsyncInfo)
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not dissociate ip %s: %s",
 			engine.ExoIP.String(), err))
@@ -112,7 +112,7 @@ func (engine *Engine) ReleaseNic(nic_id string) {
 		return
 	}
 
-	_, err = engine.Exo.RemoveIpFromNic(nic_address_id)
+	err = engine.Exo.RemoveIpFromNic(nic_address_id, engine.AsyncInfo)
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not remove ip from nic %s (%s): %s",
 			nic_id, nic_address_id, err))
@@ -122,7 +122,7 @@ func (engine *Engine) ReleaseNic(nic_id string) {
 
 func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
 
-	for _, sg := range vm.SecurityGroups {
+	for _, sg := range vm.SecurityGroup {
 		if sg.Name == sgname {
 			return true
 		}
@@ -140,7 +140,7 @@ func GetSecurityGroupPeers(ego *egoscale.Client, sgname string) ([]string, error
 
 	for _, vm := range vms {
 		if VMHasSecurityGroup(vm, sgname) {
-			primary_ip := vm.Nic[0].Ipaddress
+			primary_ip := vm.Nic[0].IpAddress
 			peers = append(peers, fmt.Sprintf("%s:%d", primary_ip, DefaultPort))
 		}
 	}
@@ -157,7 +157,7 @@ func FindPeerNic(ego *egoscale.Client, ip string) (string, error) {
 
 	for _, vm := range vms {
 
-		if vm.Nic[0].Ipaddress == ip {
+		if vm.Nic[0].IpAddress == ip {
 			return vm.Nic[0].Id, nil
 		}
 	}
