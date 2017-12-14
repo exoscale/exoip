@@ -11,6 +11,7 @@ cache: apt
 
 install:
   - go get -u github.com/golang/lint/golint
+  - git clone -b dev --single-branch https://github.com/exoscale/egoscale src/github.com/exoscale/egoscale
   - make deps
 
 script:
