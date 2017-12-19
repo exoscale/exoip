@@ -13,7 +13,7 @@ BINS=\
 RM?=rm -f
 LN=ln -s
 
-GOPATH:=$(PWD)
+export GOPATH := $(PWD)
 
 all: $(BIN)
 
