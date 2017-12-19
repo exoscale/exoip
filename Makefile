@@ -31,7 +31,7 @@ clean:
 signature: $(BINS)
 	$(foreach bin,$^,\
 		$(RM) $(bin).asc; \
-		gpg -a --sign -u operations@exoscale.net --detach $(bin);)
+		gpg -a --sign -u ops@exoscale.ch --detach $(bin);)
 
 .PHONY: cleandeps
 cleandeps: clean
