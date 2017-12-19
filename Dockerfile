@@ -10,8 +10,8 @@ RUN apk --no-cache \
         make git \
  && cd /app \
  && make deps \
- && make
+ && make build/exoip-static
 
 FROM linuxkit/ca-certificates:de21b84d9b055ad9dcecc57965b654a7a24ef8e0
-COPY --from=0 /app/build/exoip .
+COPY --from=0 /app/build/exoip-static exoip
 ENTRYPOINT ["./exoip", "-O"]
