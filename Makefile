@@ -41,4 +41,4 @@ cleandeps: clean
 deps:
 	go get github.com/exoscale/egoscale
 	$(RM) src/github.com/exoscale/$(PKG)
-	$(LN) ../../../../$(PKG) src/github.com/exoscale/$(PKG)
+	$(LN) $(GOPATH) src/github.com/exoscale/$(PKG)
