@@ -84,7 +84,7 @@ peforming the following steps:
 
 ## Setup using Cloud Init
 
-As shown in the [HAProxy Elastic IP Automatic failover](https://www.exoscale.ch/syslog/2017/02/07/haproxy-elastic-ip-automatic-failover/) article, `exoip` can be setup as a _dummy_ net interface. Below is the article configuration described using [Cloud Init](http://cloudinit.readthedocs.io/) (supported by Ubuntu, Debian, RHEL, CentOS, [CoreOS](https://coreos.com/os/docs/latest/cloud-config.html), etc.)
+As shown in the [HAProxy Elastic IP Automatic failover](https://www.exoscale.ch/syslog/2017/02/07/haproxy-elastic-ip-automatic-failover/) article, `exoip` can be setup as a _dummy_ net interface. Below is the article configuration described using [Cloud Init](http://cloudinit.readthedocs.io/) (supported by Ubuntu, Debian, RHEL, CentOS, etc.)
 
 ```yaml
 #cloud-config
