@@ -21,7 +21,7 @@ least two peers will participate in the election process.
 
 
 **exoip** uses a protocol very similar to
-[CARP](http://en.wikipedia.org/wiki/Common_Addresss_Redundancy_Protocol)
+[CARP](http://en.wikipedia.org/wiki/Common_Address_Redundancy_Protocol)
 and to some extent
 [VRRP](http://en.wikipedia.org/wiki/Virtual_Router_Redundancy_Protocol).
 
@@ -83,3 +83,41 @@ peforming the following steps:
 
     make deps
     make
+
+## Setup using Cloud Init
+
+As shown in the [HAProxy Elastic IP Automatic failover](https://www.exoscale.ch/syslog/2017/02/07/haproxy-elastic-ip-automatic-failover/) article, `exoip` can be setup as a _dummy_ net interface. Below is the article configuration described using [Cloud Init](http://cloudinit.readthedocs.io/) (supported by Ubuntu, Debian, RHEL, CentOS, [CoreOS](https://coreos.com/os/docs/latest/cloud-config.html), etc.)
+
+```yaml
+#cloud-config
+
+package_update: true
+package_upgrade: true
+
+packages:
+- ifupdown
+
+write_files:
+- path: /etc/network/interfaces
+  content: |
+    source /etc/network/interfaces.d/*.cfg
+- path: /etc/network/interfaces.d/51-exoip.cfg
+  content: |
+    auto lo:1
+    iface lo:1 inet static
+      address 198.51.100.50              # change me
+      netmask 255.255.255.255
+      exoscale-peer-group load-balancer  # change me
+      exoscale-api-key EXO....           # change me
+      exoscale-api-secret LZ...          # change me
+      up /usr/local/bin/exoip -W &
+
+runcmd:
+- wget https://github.com/exoscale/exoip/releases/download/0.3.2/exoip
+- wget https://github.com/exoscale/exoip/releases/download/0.3.2/exoip.asc
+- gpg --recv-keys E458F9F85608DF5A22ECCD158B58C61D4FFE0C86
+- gpg --verify --trust-model always exoip.asc
+- sudo chmod +x exoip
+- sudo mv exoip /usr/local/bin/
+- sudo ifup lo:1
+```
