@@ -1,4 +1,2 @@
-bin
 build
-pkg
-src
+vendor
