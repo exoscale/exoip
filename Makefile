@@ -29,3 +29,7 @@ signature: $(BINS)
 	$(foreach bin,$^,\
 		$(RM) $(bin).asc; \
 		gpg -a --sign -u ops@exoscale.ch --detach $(bin);)
+
+.PHONY: docker
+docker:
+	docker build --tag exoscale/exoip:$(shell git rev-parse --short HEAD) .
