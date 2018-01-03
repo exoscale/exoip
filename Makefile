@@ -11,9 +11,6 @@ BINS=\
 		$(BIN)-static
 
 RM?=rm -f
-LN=ln -s
-
-export GOPATH := $(PWD)
 
 all: $(BIN)
 
@@ -33,12 +30,6 @@ signature: $(BINS)
 		$(RM) $(bin).asc; \
 		gpg -a --sign -u ops@exoscale.ch --detach $(bin);)
 
-.PHONY: cleandeps
-cleandeps: clean
-	$(RM) -r src
-
-.PHONY: deps
-deps:
-	go get github.com/exoscale/egoscale
-	$(RM) src/github.com/exoscale/$(PKG)
-	$(LN) $(GOPATH) src/github.com/exoscale/$(PKG)
+.PHONY: docker
+docker:
+	docker build --tag exoscale/exoip:$(shell git rev-parse --short HEAD) .

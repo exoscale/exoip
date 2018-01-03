@@ -78,15 +78,29 @@ environment variable:
 ## Building
 
 If you wish to inspect **exoip** and build it by yourself, you may do so
-by cloning [this repository](https://github.com/exoscale/exoip) and 
+by cloning [this repository](https://github.com/exoscale/exoip) and
 peforming the following steps:
 
-    make deps
+    git clone https://github.com/exoscale/exoip $GOPATH/src/github.com/exoscale/exoip
+    cd $(GOPATH)/src/github.com/exoscale/exoip
+    go get -u github.com/golang/dep/cmd/dep
+    dep ensure
     make
+
+### Updating
+
+It uses [godep](https://github.com/golang/dep), so it should be easy.
+
+    dep status
+    dep ensure -update
 
 ## Setup using Cloud Init
 
-As shown in the [HAProxy Elastic IP Automatic failover](https://www.exoscale.ch/syslog/2017/02/07/haproxy-elastic-ip-automatic-failover/) article, `exoip` can be setup as a _dummy_ net interface. Below is the article configuration described using [Cloud Init](http://cloudinit.readthedocs.io/) (supported by Ubuntu, Debian, RHEL, CentOS, etc.)
+As shown in the [HAProxy Elastic IP Automatic
+failover](https://www.exoscale.ch/syslog/2017/02/07/haproxy-elastic-ip-automatic-failover/)
+article, `exoip` can be setup as a _dummy_ net interface. Below is the article
+configuration described using [Cloud Init](http://cloudinit.readthedocs.io/)
+(supported by Ubuntu, Debian, RHEL, CentOS, etc.)
 
 ```yaml
 #cloud-config
