@@ -125,6 +125,7 @@ write_files:
       exoscale-api-key EXO....           # change me
       exoscale-api-secret LZ...          # change me
       up /usr/local/bin/exoip -W &
+      down killall exoip
 
 runcmd:
 - wget https://github.com/exoscale/exoip/releases/download/0.3.2/exoip
