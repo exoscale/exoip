@@ -1,6 +1,9 @@
 VERSION=0.3.5-snapshot
 PKG=exoip
 
+GIMME_OS?=linux
+GIMME_ARCH?=amd64
+
 MAIN=cmd/$(PKG).go
 SRCS=$(wildcard *.go)
 
@@ -18,7 +21,7 @@ $(BIN): $(MAIN) $(SRCS)
 	go build -o $@ $<
 
 $(BIN)-static: $(MAIN) $(SRCS)
-	CGO_ENABLED=0 GOOS=linux go build -ldflags "-s" -o $@ $<
+	CGO_ENABLED=0 GOOS=$(GIMME_OS) GOARCH=$(GIMME_ARCH) go build -ldflags "-s" -o $@ $<
 
 clean:
 	$(RM) -r $(DEST)

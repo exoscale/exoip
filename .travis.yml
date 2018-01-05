@@ -7,16 +7,23 @@ go:
 - 1.9
 - tip
 
+env:
+  - GIMME_OS=linux GIMME_ARCH=amd64
+  - GIMME_OS=darwin GIMME_ARCH=amd64
+  - GIMME_OS=windows GIMME_ARCH=amd64
+
 cache: apt
 
-install:
-  - go get -u github.com/golang/lint/golint
+before_install:
   - go get -u github.com/golang/dep/cmd/dep
+  - npm i -g codeclimate-test-reporter
+
+install:
   - dep ensure
 
 script:
-  - test `gofmt -s -d . | tee -a /dev/fd/2 | wc -l` -eq 0
-  - test `bin/golint . | tee -a /dev/fd/2 | wc -l` -eq 0
-  - go tool vet .
   - make
-  - # go test -v .
+  - go test -race -coverprofile=coverage.out -coveragemode=atomic .
+
+after_success:
+  - codeclimate-test-reporter < coverage.out
