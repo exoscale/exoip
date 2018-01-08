@@ -15,31 +15,31 @@ type stringslice []string
 var timer = flag.Int("t", 1, "Advertisement interval in seconds")
 var prio = flag.Int("P", 10, "Host priority (lowest wins)")
 var address = flag.String("l", fmt.Sprintf(":%d", exoip.DefaultPort), "Address to bind to")
-var dead_ratio = flag.Int("r", 3, "Dead ratio")
-var exo_key = flag.String("xk", "", "Exoscale API Key")
-var exo_secret = flag.String("xs", "", "Exoscale API Secret")
-var exo_endpoint = flag.String("xe", "https://api.exoscale.ch/compute", "Exoscale API Endpoint")
-var exo_sg = flag.String("G", "", "Exoscale Security Group to use to create list of peers")
+var deadRatio = flag.Int("r", 3, "Dead ratio")
+var exoToken = flag.String("xk", "", "Exoscale API Key")
+var exoSecret = flag.String("xs", "", "Exoscale API Secret")
+var csEndpoint = flag.String("xe", "https://api.exoscale.ch/compute", "Exoscale API Endpoint")
+var exoSecurityGroup = flag.String("G", "", "Exoscale Security Group to use to create list of peers")
 var eip = flag.String("xi", "", "Exoscale Elastic IP to watch over")
-var instance_id = flag.String("i", "", "Exoscale Instance ID of oneself")
+var instanceID = flag.String("i", "", "Exoscale Instance ID of oneself")
 var verbose = flag.Bool("v", false, "Log additional information")
-var validate_config = flag.Bool("n", false, "Validate configuration and exit")
-var watch_mode = flag.Bool("W", false, "Watchdog mode")
-var associate_mode = flag.Bool("A", false, "Associate EIP and exit")
-var dissociate_mode = flag.Bool("D", false, "Dissociate EIP and exit")
-var log_stdout = flag.Bool("O", false, "Do not log to syslog, use standard output")
+var validateConfig = flag.Bool("n", false, "Validate configuration and exit")
+var watchMode = flag.Bool("W", false, "Watchdog mode")
+var associateMode = flag.Bool("A", false, "Associate EIP and exit")
+var disassociateMode = flag.Bool("D", false, "Dissociate EIP and exit")
+var logStdout = flag.Bool("O", false, "Do not log to syslog, use standard output")
 var peers stringslice
-var reset_peers bool = false
+var resetPeers = false
 
 func (s *stringslice) String() string {
 	return strings.Join(*s, ",")
 }
 
 func (s *stringslice) Set(value string) error {
-	if reset_peers {
+	if resetPeers {
 		*s = make([]string, 0)
 	}
-	reset_peers = false
+	resetPeers = false
 	peers := strings.Split(value, ",")
 	for _, peer := range peers {
 		*s = append(*s, peer)
@@ -47,40 +47,40 @@ func (s *stringslice) Set(value string) error {
 	return nil
 }
 
-type EnvEquiv struct {
+type envEquiv struct {
 	Env  string
 	Flag string
 }
 
-type EquivList []EnvEquiv
+type equivList []envEquiv
 
-func ParseEnvironment() {
+func parseEnvironment() {
 
-	env_flags := EquivList{
-		EnvEquiv{Env: "IF_ADDRESS", Flag: "xi"},
-		EnvEquiv{Env: "IF_BIND_TO", Flag: "l"},
-		EnvEquiv{Env: "IF_DEAD_RATIO", Flag: "r"},
-		EnvEquiv{Env: "IF_ADVERTISEMENT_INTERVAL", Flag: "t"},
-		EnvEquiv{Env: "IF_HOST_PRIORITY", Flag: "P"},
-		EnvEquiv{Env: "IF_EXOSCALE_API_KEY", Flag: "xk"},
-		EnvEquiv{Env: "IF_EXOSCALE_API_SECRET", Flag: "xs"},
-		EnvEquiv{Env: "IF_EXOSCALE_API_ENDPOINT", Flag: "xe"},
-		EnvEquiv{Env: "IF_EXOSCALE_PEER_GROUP", Flag: "G"},
-		EnvEquiv{Env: "IF_EXOSCALE_INSTANCE_ID", Flag: "i"},
-		EnvEquiv{Env: "IF_EXOSCALE_PEERS", Flag: "p"},
+	envFlags := equivList{
+		envEquiv{Env: "IF_ADDRESS", Flag: "xi"},
+		envEquiv{Env: "IF_BIND_TO", Flag: "l"},
+		envEquiv{Env: "IF_DEAD_RATIO", Flag: "r"},
+		envEquiv{Env: "IF_ADVERTISEMENT_INTERVAL", Flag: "t"},
+		envEquiv{Env: "IF_HOST_PRIORITY", Flag: "P"},
+		envEquiv{Env: "IF_EXOSCALE_API_KEY", Flag: "xk"},
+		envEquiv{Env: "IF_EXOSCALE_API_SECRET", Flag: "xs"},
+		envEquiv{Env: "IF_EXOSCALE_API_ENDPOINT", Flag: "xe"},
+		envEquiv{Env: "IF_EXOSCALE_PEER_GROUP", Flag: "G"},
+		envEquiv{Env: "IF_EXOSCALE_INSTANCE_ID", Flag: "i"},
+		envEquiv{Env: "IF_EXOSCALE_PEERS", Flag: "p"},
 	}
 
-	for _, env := range env_flags {
+	for _, env := range envFlags {
 		v := os.Getenv(env.Env)
 		if len(v) > 0 {
 			flag.Set(env.Flag, v)
 		}
 	}
 
-	reset_peers = true
+	resetPeers = true
 }
 
-func CheckConfiguration() {
+func checkConfiguration() {
 
 	die := false
 
@@ -88,13 +88,13 @@ func CheckConfiguration() {
 		exoip.Verbose = true
 	}
 	i := 0
-	if *watch_mode {
+	if *watchMode {
 		i++
 	}
-	if *associate_mode {
+	if *associateMode {
 		i++
 	}
-	if *dissociate_mode {
+	if *disassociateMode {
 		i++
 	}
 
@@ -110,14 +110,14 @@ func CheckConfiguration() {
 		die = true
 	}
 
-	if *watch_mode {
-		if len(peers) > 0 && len(*exo_sg) > 0 {
+	if *watchMode {
+		if len(peers) > 0 && len(*exoSecurityGroup) > 0 {
 			exoip.Logger.Crit("ambiguous peer definition (-p and -G given)")
 			fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
 			die = true
 		}
 
-		if len(peers) == 0 && len(*exo_sg) == 0 {
+		if len(peers) == 0 && len(*exoSecurityGroup) == 0 {
 			exoip.Logger.Crit("need peer definition (either -p or -G)")
 			fmt.Fprintln(os.Stderr, "need peer definition (either -p or -G)")
 			die = true
@@ -130,7 +130,7 @@ func CheckConfiguration() {
 		}
 	}
 
-	if len(*exo_key) == 0 || len(*exo_endpoint) == 0 || len(*exo_secret) == 0 {
+	if len(*exoToken) == 0 || len(*csEndpoint) == 0 || len(*exoSecret) == 0 {
 		exoip.Logger.Crit("insufficient API credentials")
 		fmt.Fprintln(os.Stderr, "insufficient API credentials")
 		die = true
@@ -143,23 +143,23 @@ func CheckConfiguration() {
 		fmt.Printf("\tbind-address: %s\n", *address)
 		fmt.Printf("\thost-priority: %d\n", *prio)
 		fmt.Printf("\tadvertisement-interval: %d\n", *timer)
-		fmt.Printf("\tdead-ratio: %d\n", *dead_ratio)
-		fmt.Printf("\texoscale-api-key: %s\n", *exo_key)
-		fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exo_secret)[0:2])
-		fmt.Printf("\texoscale-api-endpoint: %s\n", *exo_endpoint)
+		fmt.Printf("\tdead-ratio: %d\n", *deadRatio)
+		fmt.Printf("\texoscale-api-key: %s\n", *exoToken)
+		fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
+		fmt.Printf("\texoscale-api-endpoint: %s\n", *csEndpoint)
 
 		exoip.Logger.Info(fmt.Sprintf("exoip will watch over: %s\n", *eip))
 		exoip.Logger.Info(fmt.Sprintf("\tbind-address: %s\n", *address))
 		exoip.Logger.Info(fmt.Sprintf("\thost-priority: %d\n", *prio))
 		exoip.Logger.Info(fmt.Sprintf("\tadvertisement-interval: %d\n", *timer))
-		exoip.Logger.Info(fmt.Sprintf("\tdead-ratio: %d\n", *dead_ratio))
-		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-key: %s\n", *exo_key))
-		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-secret: %sXXXX\n", (*exo_secret)[0:2]))
-		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-endpoint: %s\n", *exo_endpoint))
+		exoip.Logger.Info(fmt.Sprintf("\tdead-ratio: %d\n", *deadRatio))
+		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-key: %s\n", *exoToken))
+		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2]))
+		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-endpoint: %s\n", *csEndpoint))
 
-		if len(*exo_sg) > 0 {
-			fmt.Printf("\texoscale-peer-group: %s\n", *exo_sg)
-			exoip.Logger.Info(fmt.Sprintf("\texoscale-peer-group: %s\n", *exo_sg))
+		if len(*exoSecurityGroup) > 0 {
+			fmt.Printf("\texoscale-peer-group: %s\n", *exoSecurityGroup)
+			exoip.Logger.Info(fmt.Sprintf("\texoscale-peer-group: %s\n", *exoSecurityGroup))
 		} else {
 			for _, p := range peers {
 				fmt.Printf("\tpeer: %s\n", p)
@@ -168,7 +168,7 @@ func CheckConfiguration() {
 		}
 	}
 
-	if *validate_config {
+	if *validateConfig {
 		os.Exit(0)
 	}
 }
@@ -179,38 +179,38 @@ func main() {
 
 	flag.Var(&peers, "p", "peers to communicate with")
 
-	ParseEnvironment()
+	parseEnvironment()
 	flag.Parse()
 
 	// Sanity Checks
-	exoip.SetupLogger(*log_stdout)
-	CheckConfiguration()
+	exoip.SetupLogger(*logStdout)
+	checkConfiguration()
 
-	if (*instance_id) == "" {
+	if (*instanceID) == "" {
 		mserver, err := exoip.FindMetadataServer()
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
-		(*instance_id), err = exoip.FetchMetadata(mserver, "/latest/instance-id")
+		(*instanceID), err = exoip.FetchMetadata(mserver, "/latest/instance-id")
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
 	}
 
-	ego := egoscale.NewClient(*exo_endpoint, *exo_key, *exo_secret)
-	if *associate_mode {
-		engine := exoip.NewEngine(ego, *eip, *instance_id)
-		if err := engine.ObtainNic(engine.NicId); err != nil {
+	ego := egoscale.NewClient(*csEndpoint, *exoToken, *exoSecret)
+	if *associateMode {
+		engine := exoip.NewEngine(ego, *eip, *instanceID)
+		if err := engine.ObtainNic(engine.NicID); err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
 
-	if *dissociate_mode {
-		engine := exoip.NewEngine(ego, *eip, *instance_id)
+	if *disassociateMode {
+		engine := exoip.NewEngine(ego, *eip, *instanceID)
 		if err := engine.ReleaseMyNic(); err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
@@ -218,20 +218,20 @@ func main() {
 		os.Exit(0)
 	}
 
-	if len(*exo_sg) > 0 {
+	if len(*exoSecurityGroup) > 0 {
 		if len(peers) > 0 {
 			fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
 			os.Exit(1)
 		}
-		sgpeers, err := exoip.GetSecurityGroupPeers(ego, *exo_sg)
+		sgpeers, err := exoip.GetSecurityGroupPeers(ego, *exoSecurityGroup)
 		if err != nil {
 			exoip.Logger.Crit("cannot build peer list from security-group")
 			fmt.Fprintf(os.Stderr, "cannot build peer list from security-group: %s\n", err)
 			os.Exit(1)
 		}
-		engine = exoip.NewWatchdogEngine(ego, *eip, *instance_id, *timer, *prio, *dead_ratio, sgpeers)
+		engine = exoip.NewWatchdogEngine(ego, *eip, *instanceID, *timer, *prio, *deadRatio, sgpeers)
 	} else {
-		engine = exoip.NewWatchdogEngine(ego, *eip, *instance_id, *timer, *prio, *dead_ratio, peers)
+		engine = exoip.NewWatchdogEngine(ego, *eip, *instanceID, *timer, *prio, *deadRatio, peers)
 	}
 	exoip.Logger.Info("starting watchdog")
 	go engine.NetworkAdvertise()

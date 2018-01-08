@@ -43,7 +43,8 @@ func (l *wrappedLogger) Info(msg string) {
 	}
 }
 
-func setupLogger(logStdout bool) {
+// SetupLogger initializes the logger
+func SetupLogger(logStdout bool) {
 	if logStdout {
 		logger := log.New(os.Stdout, "exoip ", 0)
 		Logger = &wrappedLogger{syslog: false, stdWriter: logger}

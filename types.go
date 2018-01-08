@@ -35,18 +35,19 @@ const (
 
 // Engine represents the ExoIP engine structure
 type Engine struct {
-	DeadRatio   int
-	Interval    int
-	Priority    byte
-	VHID        byte
-	SendBuf     []byte
-	Peers       []*Peer
-	State       State
-	LastSend    int64
-	InitHoldOff int64
-	ExoVM       string
-	NicID       string
-	ExoIP       net.IP
-	Exo         *egoscale.Client
-	InstanceID  string
+	DeadRatio        int
+	Interval         int
+	Priority         byte
+	VHID             byte
+	SendBuf          []byte
+	Peers            []*Peer
+	State            State
+	LastSend         int64
+	InitHoldOff      int64
+	VirtualMachineID string
+	NicID            string
+	ExoIP            net.IP
+	Exo              *egoscale.Client
+	Async            egoscale.AsyncInfo
+	InstanceID       string
 }

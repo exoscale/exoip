@@ -24,7 +24,8 @@ const SkewMillis = 100
 // Skew how much time to way
 const Skew time.Duration = 100 * time.Millisecond
 
-var verbose = false
+// Verbose makes the client talkative
+var Verbose = false
 
 func removeDash(r rune) rune {
 	if r == '-' {
@@ -122,6 +123,7 @@ func NewWatchdogEngine(client *egoscale.Client, ip, instanceID string, interval 
 		ExoIP:       netip,
 		Exo:         client,
 		InstanceID:  instanceID,
+		Async:       egoscale.AsyncInfo{Retries: 3, Delay: 20},
 		InitHoldOff: currentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
 	}
 	for _, p := range peers {
@@ -153,4 +155,22 @@ func NewEngine(client *egoscale.Client, ip, instanceID string) *Engine {
 	}
 	engine.FetchNicAndVM()
 	return &engine
+}
+
+func getVirtualMachine(cs *egoscale.Client, instanceID string) (*egoscale.VirtualMachine, error) {
+	resp, err := cs.Request(&egoscale.ListVirtualMachines{
+		ID: instanceID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*egoscale.ListVirtualMachinesResponse).VirtualMachine[0], nil
+}
+
+func listVirtualMachines(cs *egoscale.Client) ([]*egoscale.VirtualMachine, error) {
+	resp, err := cs.Request(&egoscale.ListVirtualMachines{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*egoscale.ListVirtualMachinesResponse).VirtualMachine, nil
 }
