@@ -12,20 +12,28 @@ import (
 	"github.com/exoscale/egoscale"
 )
 
+// DefaultPort used by exoip
 const DefaultPort = 12345
+
+// ProtoVersion version of the protocol
 const ProtoVersion = "0201"
+
+// SkewMillis how much time to way
 const SkewMillis = 100
+
+// Skew how much time to way
 const Skew time.Duration = 100 * time.Millisecond
 
-var Verbose bool = false
+var verbose = false
 
-func remove_dash(r rune) rune {
+func removeDash(r rune) rune {
 	if r == '-' {
 		return -1
 	}
 	return r
 }
 
+// StrToUUID covert a str into a UUID
 func StrToUUID(ustr string) ([]byte, error) {
 
 	if len(ustr) != 36 {
@@ -40,7 +48,7 @@ func StrToUUID(ustr string) ([]byte, error) {
 			return nil, errors.New("Bad characters in NicId")
 		}
 	}
-	ustr = strings.Map(remove_dash, ustr)
+	ustr = strings.Map(removeDash, ustr)
 	if len(ustr) != 32 {
 		return nil, errors.New("NicId has wrong length")
 	}
@@ -55,6 +63,7 @@ func StrToUUID(ustr string) ([]byte, error) {
 	return ba, nil
 }
 
+// UUIDToStr converts a UUID into a str
 func UUIDToStr(uuidbuf []byte) string {
 
 	str := hex.EncodeToString(uuidbuf)
@@ -64,10 +73,11 @@ func UUIDToStr(uuidbuf []byte) string {
 	return hexuuid
 }
 
-func NewWatchdogEngine(client *egoscale.Client, ip, instance_id string, interval int,
-	prio int, dead_ratio int, peers []string) *Engine {
+// NewWatchdogEngine creates an new watchdog engine
+func NewWatchdogEngine(client *egoscale.Client, ip, instanceID string, interval int,
+	prio int, deadRatio int, peers []string) *Engine {
 
-	nicid, err := FetchMyNic(client, instance_id)
+	nicid, err := FetchMyNic(client, instanceID)
 	uuidbuf, err := StrToUUID(nicid)
 	AssertSuccess(err)
 	sendbuf := make([]byte, 24)
@@ -102,17 +112,17 @@ func NewWatchdogEngine(client *egoscale.Client, ip, instance_id string, interval
 	}
 
 	engine := Engine{
-		DeadRatio:   dead_ratio,
+		DeadRatio:   deadRatio,
 		Interval:    interval,
 		Priority:    sendbuf[2],
 		SendBuf:     sendbuf,
 		Peers:       make([]*Peer, 0),
 		State:       StateBackup,
-		NicId:       nicid,
+		NicID:       nicid,
 		ExoIP:       netip,
 		Exo:         client,
-		InstanceID:  instance_id,
-		InitHoldOff: CurrentTimeMillis() + (1000 * int64(dead_ratio) * int64(interval)) + SkewMillis,
+		InstanceID:  instanceID,
+		InitHoldOff: currentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
 	}
 	for _, p := range peers {
 		engine.Peers = append(engine.Peers, NewPeer(client, p))
@@ -120,7 +130,8 @@ func NewWatchdogEngine(client *egoscale.Client, ip, instance_id string, interval
 	return &engine
 }
 
-func NewEngine(client *egoscale.Client, ip, instance_id string) *Engine {
+// NewEngine creates a new engine
+func NewEngine(client *egoscale.Client, ip, instanceID string) *Engine {
 
 	netip := net.ParseIP(ip)
 	if netip == nil {
@@ -138,8 +149,8 @@ func NewEngine(client *egoscale.Client, ip, instance_id string) *Engine {
 	engine := Engine{
 		ExoIP:      netip,
 		Exo:        client,
-		InstanceID: instance_id,
+		InstanceID: instanceID,
 	}
-	engine.FetchNicAndVm()
+	engine.FetchNicAndVM()
 	return &engine
 }

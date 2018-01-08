@@ -8,46 +8,50 @@ import (
 	"github.com/exoscale/egoscale"
 )
 
-func FetchMyNic(ego *egoscale.Client, instanceId string) (string, error) {
+// FetchMyNic fetches the nic of the current instance
+func FetchMyNic(ego *egoscale.Client, instanceID string) (string, error) {
 
-	vm_info, err := ego.GetVirtualMachine(instanceId)
+	vmInfo, err := ego.GetVirtualMachine(instanceID)
 	if err != nil {
 		return "", err
 	}
-	if len(vm_info.Nic) < 1 {
+	if len(vmInfo.Nic) < 1 {
 		return "", errors.New("cannot find virtual machine Nic ID")
 	}
-	return vm_info.Nic[0].Id, nil
+	return vmInfo.Nic[0].Id, nil
 }
 
-func (engine *Engine) FetchNicAndVm() {
+// FetchNicAndVM fetches our NIC and the VirtualMachine
+func (engine *Engine) FetchNicAndVM() {
 
-	vm_info, err := engine.Exo.GetVirtualMachine(engine.InstanceID)
+	vmInfo, err := engine.Exo.GetVirtualMachine(engine.InstanceID)
 	AssertSuccess(err)
 
-	if len(vm_info.Nic) < 1 {
+	if len(vmInfo.Nic) < 1 {
 		Logger.Crit("cannot find virtual machine Nic ID")
 		fmt.Fprintln(os.Stderr, "cannot find virtual machine Nic ID")
 		os.Exit(1)
 	}
-	engine.ExoVM = vm_info.Id
-	engine.NicId = vm_info.Nic[0].Id
+	engine.ExoVM = vmInfo.Id
+	engine.NicID = vmInfo.Nic[0].Id
 }
 
-func (engine *Engine) ObtainNic(nic_id string) error {
+// ObtainNic add the elastic IP to the given NIC
+func (engine *Engine) ObtainNic(nicID string) error {
 
-	_, err := engine.Exo.AddIpToNic(nic_id, engine.ExoIP.String())
+	_, err := engine.Exo.AddIpToNic(nicID, engine.ExoIP.String())
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not add ip %s to nic %s: %s",
 			engine.ExoIP.String(),
-			nic_id,
+			nicID,
 			err))
 		return err
 	}
-	Logger.Info(fmt.Sprintf("claimed ip %s on nic %s", engine.ExoIP.String(), nic_id))
+	Logger.Info(fmt.Sprintf("claimed ip %s on nic %s", engine.ExoIP.String(), nicID))
 	return nil
 }
 
+// ReleaseMyNic releases the elastic IP from the NIC
 func (engine *Engine) ReleaseMyNic() error {
 	vm, err := engine.Exo.GetVirtualMachine(engine.ExoVM)
 	if err != nil {
@@ -55,19 +59,19 @@ func (engine *Engine) ReleaseMyNic() error {
 			err))
 		return err
 	}
-	nic_address_id := ""
-	for _, sec_ip := range vm.Nic[0].Secondaryip {
-		if sec_ip.IpAddress == engine.ExoIP.String() {
-			nic_address_id = sec_ip.Id
+	nicAddressID := ""
+	for _, secIP := range vm.Nic[0].Secondaryip {
+		if secIP.IpAddress == engine.ExoIP.String() {
+			nicAddressID = secIP.Id
 			break
 		}
 	}
-	if len(nic_address_id) == 0 {
+	if len(nicAddressID) == 0 {
 		Logger.Warning("could not remove ip from nic: unknown association")
 		return fmt.Errorf("could not remove ip from nic: unknown association")
 	}
 
-	_, err = engine.Exo.RemoveIpFromNic(nic_address_id)
+	_, err = engine.Exo.RemoveIpFromNic(nicAddressID)
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not dissociate ip %s: %s",
 			engine.ExoIP.String(), err))
@@ -77,7 +81,8 @@ func (engine *Engine) ReleaseMyNic() error {
 	return nil
 }
 
-func (engine *Engine) ReleaseNic(nic_id string) {
+// ReleaseNic removes the Elastic IP from the given NIC
+func (engine *Engine) ReleaseNic(nicID string) {
 
 	vms, err := engine.Exo.ListVirtualMachines()
 	if err != nil {
@@ -86,34 +91,35 @@ func (engine *Engine) ReleaseNic(nic_id string) {
 		return
 	}
 
-	nic_address_id := ""
+	nicAddressID := ""
 	for _, vm := range vms {
-		if vm.Nic[0].Id == nic_id {
-			for _, sec_ip := range vm.Nic[0].Secondaryip {
-				if sec_ip.IpAddress == engine.ExoIP.String() {
-					nic_address_id = sec_ip.Id
+		if vm.Nic[0].Id == nicID {
+			for _, secIP := range vm.Nic[0].Secondaryip {
+				if secIP.IpAddress == engine.ExoIP.String() {
+					nicAddressID = secIP.Id
 					break
 				}
 			}
 		}
 	}
 
-	if len(nic_address_id) == 0 {
+	if len(nicAddressID) == 0 {
 		Logger.Warning("could not remove ip from nic: unknown association")
 		return
 	}
 
-	_, err = engine.Exo.RemoveIpFromNic(nic_address_id)
+	_, err = engine.Exo.RemoveIpFromNic(nicAddressID)
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not remove ip from nic %s (%s): %s",
-			nic_id, nic_address_id, err))
+			nicID, nicAddressID, err))
 	}
-	Logger.Info(fmt.Sprintf("released ip %s from nic %s", engine.ExoIP.String(), nic_id))
+	Logger.Info(fmt.Sprintf("released ip %s from nic %s", engine.ExoIP.String(), nicID))
 }
 
+// VMHasSecurityGroup tells whether the VM has any security groups
 func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
 
-	for _, sg := range vm.SecurityGroups {
+	for _, sg := range vm.SecurityGroup {
 		if sg.Name == sgname {
 			return true
 		}
@@ -121,6 +127,7 @@ func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
 	return false
 }
 
+// GetSecurityGroupPeers returns the other machines within the same security group
 func GetSecurityGroupPeers(ego *egoscale.Client, sgname string) ([]string, error) {
 
 	peers := make([]string, 0)
@@ -131,14 +138,15 @@ func GetSecurityGroupPeers(ego *egoscale.Client, sgname string) ([]string, error
 
 	for _, vm := range vms {
 		if VMHasSecurityGroup(vm, sgname) {
-			primary_ip := vm.Nic[0].Ipaddress
-			peers = append(peers, fmt.Sprintf("%s:%d", primary_ip, DefaultPort))
+			primaryIP := vm.Nic[0].IpAddress
+			peers = append(peers, fmt.Sprintf("%s:%d", primaryIP, DefaultPort))
 		}
 	}
 
 	return peers, nil
 }
 
+// FindPeerNic return the NIC ID of a given peer
 func FindPeerNic(ego *egoscale.Client, ip string) (string, error) {
 
 	vms, err := ego.ListVirtualMachines()
@@ -148,7 +156,7 @@ func FindPeerNic(ego *egoscale.Client, ip string) (string, error) {
 
 	for _, vm := range vms {
 
-		if vm.Nic[0].Ipaddress == ip {
+		if vm.Nic[0].IpAddress == ip {
 			return vm.Nic[0].Id, nil
 		}
 	}

@@ -15,8 +15,8 @@ install:
   - dep ensure
 
 script:
-  - make
   - test `gofmt -s -d . | tee -a /dev/fd/2 | wc -l` -eq 0
-  - # test `bin/golint . | tee -a /dev/fd/2 | wc -l` -eq 0
+  - test `bin/golint . | tee -a /dev/fd/2 | wc -l` -eq 0
   - go tool vet .
+  - make
   - # go test -v .

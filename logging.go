@@ -7,49 +7,52 @@ import (
 	"os"
 )
 
-type WrappedLogger struct {
-	syslog        bool
-	syslog_writer *syslog.Writer
-	std_writer    *log.Logger
+type wrappedLogger struct {
+	syslog       bool
+	syslogWriter *syslog.Writer
+	stdWriter    *log.Logger
 }
 
-var Logger *WrappedLogger
+// Logger represents a wrapped version of syslog
+var Logger *wrappedLogger
 
-func (l *WrappedLogger) Warning(msg string) {
+// Warning logs a message with severity LOG_WARNING
+func (l *wrappedLogger) Warning(msg string) {
 	if l.syslog {
-		l.syslog_writer.Warning(msg)
+		l.syslogWriter.Warning(msg)
 	} else {
-		l.std_writer.Printf("[WARNING] %s", msg)
+		l.stdWriter.Printf("[WARNING] %s", msg)
 	}
 }
 
-func (l *WrappedLogger) Crit(msg string) {
+// Crit logs a message with severity LOG_CRIT
+func (l *wrappedLogger) Crit(msg string) {
 	if l.syslog {
-		l.syslog_writer.Crit(msg)
+		l.syslogWriter.Crit(msg)
 	} else {
-		l.std_writer.Printf("[CRIT   ] %s", msg)
+		l.stdWriter.Printf("[CRIT   ] %s", msg)
 	}
 }
 
-func (l *WrappedLogger) Info(msg string) {
+// Info logs a message with severity LOG_INFO
+func (l *wrappedLogger) Info(msg string) {
 	if l.syslog {
-		l.syslog_writer.Info(msg)
+		l.syslogWriter.Info(msg)
 	} else {
-		l.std_writer.Printf("[INFO   ] %s", msg)
+		l.stdWriter.Printf("[INFO   ] %s", msg)
 	}
 }
 
-func SetupLogger(log_stdout bool) {
-
-	if log_stdout {
+func setupLogger(logStdout bool) {
+	if logStdout {
 		logger := log.New(os.Stdout, "exoip ", 0)
-		Logger = &WrappedLogger{syslog: false, std_writer: logger}
+		Logger = &wrappedLogger{syslog: false, stdWriter: logger}
 	} else {
 		logger, err := syslog.New(syslog.LOG_DAEMON, "exoip")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "fatal error:", err)
 			os.Exit(1)
 		}
-		Logger = &WrappedLogger{syslog: true, syslog_writer: logger}
+		Logger = &wrappedLogger{syslog: true, syslogWriter: logger}
 	}
 }

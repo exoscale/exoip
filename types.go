@@ -6,28 +6,34 @@ import (
 	"github.com/exoscale/egoscale"
 )
 
+// Peer represents a peer machine
 type Peer struct {
 	IP       net.IP
 	Dead     bool
 	Priority byte
 	LastSeen int64
-	NicId    string
+	NicID    string
 	Conn     *net.UDPConn
 }
 
+// Payload represents a message of our protocol
 type Payload struct {
 	Priority byte
 	ExoIP    net.IP
-	NicId    string
+	NicID    string
 }
 
+// State represents the state : backup, master
 type State int
 
 const (
+	// StateBackup represents the backup state
 	StateBackup State = iota
+	// StateMaster represents the master state
 	StateMaster State = iota
 )
 
+// Engine represents the ExoIP engine structure
 type Engine struct {
 	DeadRatio   int
 	Interval    int
@@ -39,7 +45,7 @@ type Engine struct {
 	LastSend    int64
 	InitHoldOff int64
 	ExoVM       string
-	NicId       string
+	NicID       string
 	ExoIP       net.IP
 	Exo         *egoscale.Client
 	InstanceID  string

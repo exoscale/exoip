@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// AssertSuccess logs the error and exists if something bad occurs
 func AssertSuccess(err error) {
 	if err == nil {
 		return

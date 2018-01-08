@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// FindMetadataServer finds the Virtual Router / Metadata server IP address
 func FindMetadataServer() (string, error) {
 
 	out, err := exec.Command("ip", "route", "list").Output()
@@ -24,8 +25,8 @@ func FindMetadataServer() (string, error) {
 	return "", fmt.Errorf("could not find metadata server")
 }
 
+// FetchMetadata reads the metadata from the Virtual Router
 func FetchMetadata(mserver string, path string) (string, error) {
-	// FIXME: http!
 	url := fmt.Sprintf("http://%s/%s", mserver, path)
 	resp, err := http.Get(url)
 	if err != nil {

@@ -8,8 +8,7 @@ import (
 	"time"
 )
 
-func BufToPayload(buf []byte) (*Payload, error) {
-
+func bufToPayload(buf []byte) (*Payload, error) {
 	protobuf := make([]byte, 2)
 	protobuf = buf[0:2]
 	uuidbuf := make([]byte, 16)
@@ -26,11 +25,12 @@ func BufToPayload(buf []byte) (*Payload, error) {
 	}
 
 	ip := net.IPv4(buf[4], buf[5], buf[6], buf[7])
-	return &Payload{NicId: UUIDToStr(uuidbuf), Priority: buf[2], ExoIP: ip}, nil
+	return &Payload{NicID: UUIDToStr(uuidbuf), Priority: buf[2], ExoIP: ip}, nil
 }
 
-func (engine *Engine) NetworkLoop(listen_address string) error {
-	ServerAddr, err := net.ResolveUDPAddr("udp", listen_address)
+// NetworkLoop starts the UDP server
+func (engine *Engine) NetworkLoop(listenAddress string) error {
+	ServerAddr, err := net.ResolveUDPAddr("udp", listenAddress)
 	AssertSuccess(err)
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
 	AssertSuccess(err)
@@ -46,7 +46,7 @@ func (engine *Engine) NetworkLoop(listen_address string) error {
 			Logger.Warning("bad network payload")
 
 		}
-		payload, err := BufToPayload(buf)
+		payload, err := bufToPayload(buf)
 		if err != nil {
 			Logger.Warning("unparseable payload")
 		} else {
@@ -55,6 +55,7 @@ func (engine *Engine) NetworkLoop(listen_address string) error {
 	}
 }
 
+// NetworkAdvertise pings every interval our peers
 func (engine *Engine) NetworkAdvertise() {
 	for {
 		time.Sleep(time.Duration(engine.Interval) * time.Second)
@@ -63,7 +64,7 @@ func (engine *Engine) NetworkAdvertise() {
 				/* do not account for errors */
 				peer.Conn.Write(engine.SendBuf)
 			}
-			engine.LastSend = CurrentTimeMillis()
+			engine.LastSend = currentTimeMillis()
 		}()
 		go engine.CheckState()
 	}
