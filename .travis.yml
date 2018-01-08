@@ -23,7 +23,7 @@ install:
 
 script:
   - make
-  - go test -race -coverprofile=coverage.out -coveragemode=atomic .
+  - go test -race -coverprofile=coverage.out -covermode=atomic .
 
 after_success:
   - codeclimate-test-reporter < coverage.out

@@ -80,13 +80,28 @@ func parseEnvironment() {
 	resetPeers = true
 }
 
-func checkConfiguration() {
-
-	die := false
+func setupLogger() {
+	exoip.SetupLogger(*logStdout)
 
 	if *verbose {
 		exoip.Verbose = true
 	}
+}
+
+func checkConfiguration() {
+	die := !checkMode() || !checkEIP()
+	if *watchMode {
+		die = die || !checkPeerAndSecurityGroups() || !checkPeerDefinition() || !checkHostPriority()
+	}
+
+	die = die || !checkAPI()
+
+	if die {
+		os.Exit(1)
+	}
+}
+
+func checkMode() bool {
 	i := 0
 	if *watchMode {
 		i++
@@ -101,75 +116,84 @@ func checkConfiguration() {
 	if i != 1 {
 		fmt.Fprintln(os.Stderr, "need exactly one of -A, -D, or -W")
 		exoip.Logger.Info(fmt.Sprintf("invalid mode: need exactly one of -A, -D, or -W"))
-		die = true
+		return false
 	}
 
+	return true
+}
+
+func checkEIP() bool {
 	if len(*eip) == 0 {
 		exoip.Logger.Crit("no Exoscale IP provided")
 		fmt.Fprintln(os.Stderr, "no Exoscale IP provided")
-		die = true
+		return false
 	}
+	return true
+}
 
-	if *watchMode {
-		if len(peers) > 0 && len(*exoSecurityGroup) > 0 {
-			exoip.Logger.Crit("ambiguous peer definition (-p and -G given)")
-			fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
-			die = true
-		}
-
-		if len(peers) == 0 && len(*exoSecurityGroup) == 0 {
-			exoip.Logger.Crit("need peer definition (either -p or -G)")
-			fmt.Fprintln(os.Stderr, "need peer definition (either -p or -G)")
-			die = true
-		}
-
-		if *prio < 0 || *prio > 255 {
-			exoip.Logger.Crit("invalid host priority (must be 0-255)")
-			fmt.Fprintln(os.Stderr, "invalid host priority (must be 0-255)")
-			die = true
-		}
+func checkPeerAndSecurityGroups() bool {
+	if len(peers) > 0 && len(*exoSecurityGroup) > 0 {
+		exoip.Logger.Crit("ambiguous peer definition (-p and -G given)")
+		fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
+		return false
 	}
+	return true
+}
 
+func checkPeerDefinition() bool {
+	if len(peers) == 0 && len(*exoSecurityGroup) == 0 {
+		exoip.Logger.Crit("need peer definition (either -p or -G)")
+		fmt.Fprintln(os.Stderr, "need peer definition (either -p or -G)")
+		return false
+	}
+	return true
+}
+
+func checkHostPriority() bool {
+	if *prio < 0 || *prio > 255 {
+		exoip.Logger.Crit("invalid host priority (must be 0-255)")
+		fmt.Fprintln(os.Stderr, "invalid host priority (must be 0-255)")
+		return false
+	}
+	return true
+}
+
+func checkAPI() bool {
 	if len(*exoToken) == 0 || len(*csEndpoint) == 0 || len(*exoSecret) == 0 {
 		exoip.Logger.Crit("insufficient API credentials")
 		fmt.Fprintln(os.Stderr, "insufficient API credentials")
-		die = true
+		return false
 	}
-	if die {
-		os.Exit(1)
-	}
-	if exoip.Verbose {
-		fmt.Printf("exoip will watch over: %s\n", *eip)
-		fmt.Printf("\tbind-address: %s\n", *address)
-		fmt.Printf("\thost-priority: %d\n", *prio)
-		fmt.Printf("\tadvertisement-interval: %d\n", *timer)
-		fmt.Printf("\tdead-ratio: %d\n", *deadRatio)
-		fmt.Printf("\texoscale-api-key: %s\n", *exoToken)
-		fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
-		fmt.Printf("\texoscale-api-endpoint: %s\n", *csEndpoint)
+	return true
+}
 
-		exoip.Logger.Info(fmt.Sprintf("exoip will watch over: %s\n", *eip))
-		exoip.Logger.Info(fmt.Sprintf("\tbind-address: %s\n", *address))
-		exoip.Logger.Info(fmt.Sprintf("\thost-priority: %d\n", *prio))
-		exoip.Logger.Info(fmt.Sprintf("\tadvertisement-interval: %d\n", *timer))
-		exoip.Logger.Info(fmt.Sprintf("\tdead-ratio: %d\n", *deadRatio))
-		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-key: %s\n", *exoToken))
-		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2]))
-		exoip.Logger.Info(fmt.Sprintf("\texoscale-api-endpoint: %s\n", *csEndpoint))
+func printConfiguration() {
+	fmt.Printf("exoip will watch over: %s\n", *eip)
+	fmt.Printf("\tbind-address: %s\n", *address)
+	fmt.Printf("\thost-priority: %d\n", *prio)
+	fmt.Printf("\tadvertisement-interval: %d\n", *timer)
+	fmt.Printf("\tdead-ratio: %d\n", *deadRatio)
+	fmt.Printf("\texoscale-api-key: %s\n", *exoToken)
+	fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
+	fmt.Printf("\texoscale-api-endpoint: %s\n", *csEndpoint)
 
-		if len(*exoSecurityGroup) > 0 {
-			fmt.Printf("\texoscale-peer-group: %s\n", *exoSecurityGroup)
-			exoip.Logger.Info(fmt.Sprintf("\texoscale-peer-group: %s\n", *exoSecurityGroup))
-		} else {
-			for _, p := range peers {
-				fmt.Printf("\tpeer: %s\n", p)
-				exoip.Logger.Info(fmt.Sprintf("\tpeer: %s\n", p))
-			}
+	exoip.Logger.Info(fmt.Sprintf("exoip will watch over: %s\n", *eip))
+	exoip.Logger.Info(fmt.Sprintf("\tbind-address: %s\n", *address))
+	exoip.Logger.Info(fmt.Sprintf("\thost-priority: %d\n", *prio))
+	exoip.Logger.Info(fmt.Sprintf("\tadvertisement-interval: %d\n", *timer))
+	exoip.Logger.Info(fmt.Sprintf("\tdead-ratio: %d\n", *deadRatio))
+	exoip.Logger.Info(fmt.Sprintf("\texoscale-api-key: %s\n", *exoToken))
+	exoip.Logger.Info(fmt.Sprintf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2]))
+	exoip.Logger.Info(fmt.Sprintf("\texoscale-api-endpoint: %s\n", *csEndpoint))
+
+	if len(*exoSecurityGroup) > 0 {
+		fmt.Printf("\texoscale-peer-group: %s\n", *exoSecurityGroup)
+		exoip.Logger.Info(fmt.Sprintf("\texoscale-peer-group: %s\n", *exoSecurityGroup))
+	} else {
+		for _, p := range peers {
+			fmt.Printf("\tpeer: %s\n", p)
+			exoip.Logger.Info(fmt.Sprintf("\tpeer: %s\n", p))
 		}
-	}
-
-	if *validateConfig {
-		os.Exit(0)
 	}
 }
 
@@ -183,8 +207,14 @@ func main() {
 	flag.Parse()
 
 	// Sanity Checks
-	exoip.SetupLogger(*logStdout)
+	setupLogger()
 	checkConfiguration()
+	if exoip.Verbose {
+		printConfiguration()
+	}
+	if *validateConfig {
+		os.Exit(0)
+	}
 
 	if (*instanceID) == "" {
 		mserver, err := exoip.FindMetadataServer()
