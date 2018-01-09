@@ -1,6 +1,7 @@
 package exoip
 
 import (
+	"fmt"
 	"log"
 	"log/syslog"
 	"os"
@@ -45,7 +46,10 @@ func SetupLogger(log_stdout bool) {
 		Logger = &WrappedLogger{syslog: false, std_writer: logger}
 	} else {
 		logger, err := syslog.New(syslog.LOG_DAEMON, "exoip")
-		AssertSuccess(err)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "fatal error:", err)
+			os.Exit(1)
+		}
 		Logger = &WrappedLogger{syslog: true, syslog_writer: logger}
 	}
 }
