@@ -7,9 +7,6 @@ go:
 - 1.9
 - tip
 
-env:
-  - GIMME_OS=linux GIMME_ARCH=amd64
-
 cache: apt
 
 before_install:
@@ -17,7 +14,7 @@ before_install:
   - npm i -g codeclimate-test-reporter
 
 install:
-  - dep ensure
+  - make deps
 
 script:
   - make

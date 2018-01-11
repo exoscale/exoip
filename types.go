@@ -48,6 +48,5 @@ type Engine struct {
 	NicID            string
 	ExoIP            net.IP
 	Exo              *egoscale.Client
-	Async            egoscale.AsyncInfo
 	InstanceID       string
 }

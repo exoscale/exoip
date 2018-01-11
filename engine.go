@@ -123,7 +123,6 @@ func NewWatchdogEngine(client *egoscale.Client, ip, instanceID string, interval 
 		ExoIP:       netip,
 		Exo:         client,
 		InstanceID:  instanceID,
-		Async:       egoscale.AsyncInfo{Retries: 3, Delay: 20},
 		InitHoldOff: currentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
 	}
 	for _, p := range peers {
@@ -164,10 +163,11 @@ func getVirtualMachine(cs *egoscale.Client, instanceID string) (*egoscale.Virtua
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*egoscale.ListVirtualMachinesResponse).VirtualMachine[0], nil
+	vm := resp.(*egoscale.ListVirtualMachinesResponse).VirtualMachine[0]
+	return &vm, nil
 }
 
-func listVirtualMachines(cs *egoscale.Client) ([]*egoscale.VirtualMachine, error) {
+func listVirtualMachines(cs *egoscale.Client) ([]egoscale.VirtualMachine, error) {
 	resp, err := cs.Request(&egoscale.ListVirtualMachines{})
 	if err != nil {
 		return nil, err

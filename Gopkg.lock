@@ -4,12 +4,18 @@
 [[projects]]
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "4721ddd01e081a330d0c0678e7889b6ee505809d"
-  version = "v0.9.0"
+  revision = "5c191f1d82540498eb0552346f4a4db03a63e657"
+  version = "v0.9.14"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jinzhu/copier"
+  packages = ["."]
+  revision = "7e38e58719c33e0d44d585c4ab477a30f8cb82dd"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "19e14af1266f536b59f8623a8050682c8265a4232ac7bf670534f5d1e10c0f05"
+  inputs-digest = "66e990fb54bd1182c42522dc739b57f9db8f382c91c628f69a5fa9526c576455"
   solver-name = "gps-cdcl"
   solver-version = 1

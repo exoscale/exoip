@@ -1,27 +1,53 @@
 VERSION=0.3.5-snapshot
-PKG=exoip
+PKG=github.com/exoscale/exoip
 
 GIMME_OS?=linux
 GIMME_ARCH?=amd64
 
-MAIN=cmd/$(PKG).go
+
+MAIN=exoip
+CLI=cmd/$(MAIN).go
 SRCS=$(wildcard *.go)
 
 DEST=build
-BIN=$(DEST)/$(PKG)
+BIN=$(DEST)/$(MAIN)
 BINS=\
 		$(BIN)        \
 		$(BIN)-static
+
+GOPATH=$(CURDIR)/.gopath
+DEP=$(GOPATH)/bin/dep
+
+export GOPATH
 
 RM?=rm -f
 
 all: $(BIN)
 
-$(BIN): $(MAIN) $(SRCS)
-	go build -o $@ $<
+.phony: deps
+deps: $(GOPATH)/src/$(PKG)
+	(cd $(GOPATH)/src/$(PKG) && \
+		$(DEP) ensure)
 
-$(BIN)-static: $(MAIN) $(SRCS)
-	CGO_ENABLED=0 GOOS=$(GIMME_OS) GOARCH=$(GIMME_ARCH) go build -ldflags "-s" -o $@ $<
+$(GOPATH)/src/$(PKG):
+	mkdir -p $(GOPATH)
+	go get -u github.com/golang/dep/cmd/dep
+	mkdir -p $(shell dirname $(GOPATH)/src/$(PKG))
+	ln -sf ../../../.. $(GOPATH)/src/$(PKG)
+
+.phony: deps-update
+deps-update: deps
+	(cd $(GOPATH)/src/$(PKG) && \
+		$(DEP) ensure -update)
+
+$(BIN): $(CLI) $(SRCS)
+	(cd $(GOPATH)/src/$(PKG) && \
+		go build -o $@ $<)
+
+$(BIN)-static: $(CLI) $(SRCS)
+	(cd $(GOPATH)/src/$(PKG) && \
+		CGO_ENABLED=0 GOOS=$(GIMME_OS) GOARCH=$(GIMME_ARCH) \
+		go build -ldflags "-s" -o $@ $<)
 
 clean:
 	$(RM) -r $(DEST)

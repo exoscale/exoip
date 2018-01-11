@@ -21,7 +21,7 @@ RUN apk add --no-cache \
 
 
 FROM alpine:3.7
-COPY --from=build /go/bin/exoip-static exoip
+COPY --from=build /go/bin/exoip exoip
 RUN apk add --no-cache \
         ca-certificates \
         iproute2

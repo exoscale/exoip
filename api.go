@@ -39,7 +39,7 @@ func (engine *Engine) FetchNicAndVM() {
 // ObtainNic add the elastic IP to the given NIC
 func (engine *Engine) ObtainNic(nicID string) error {
 
-	_, err := engine.Exo.AddIPToNic(nicID, engine.ExoIP.String(), engine.Async)
+	_, err := engine.Exo.AddIPToNic(nicID, engine.ExoIP.String())
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not add ip %s to nic %s: %s",
 			engine.ExoIP.String(),
@@ -61,7 +61,7 @@ func (engine *Engine) ReleaseMyNic() error {
 	}
 	nicAddressID := ""
 	for _, secIP := range vm.Nic[0].SecondaryIP {
-		if secIP.IPAddress == engine.ExoIP.String() {
+		if secIP.IPAddress.String() == engine.ExoIP.String() {
 			nicAddressID = secIP.ID
 			break
 		}
@@ -71,7 +71,7 @@ func (engine *Engine) ReleaseMyNic() error {
 		return fmt.Errorf("could not remove ip from nic: unknown association")
 	}
 
-	err = engine.Exo.RemoveIPFromNic(nicAddressID, engine.Async)
+	err = engine.Exo.RemoveIPFromNic(nicAddressID)
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not dissociate ip %s: %s",
 			engine.ExoIP.String(), err))
@@ -95,7 +95,7 @@ func (engine *Engine) ReleaseNic(nicID string) {
 	for _, vm := range vms {
 		if vm.Nic[0].ID == nicID {
 			for _, secIP := range vm.Nic[0].SecondaryIP {
-				if secIP.IPAddress == engine.ExoIP.String() {
+				if secIP.IPAddress.String() == engine.ExoIP.String() {
 					nicAddressID = secIP.ID
 					break
 				}
@@ -108,7 +108,7 @@ func (engine *Engine) ReleaseNic(nicID string) {
 		return
 	}
 
-	err = engine.Exo.RemoveIPFromNic(nicAddressID, engine.Async)
+	err = engine.Exo.RemoveIPFromNic(nicAddressID)
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not remove ip from nic %s (%s): %s",
 			nicID, nicAddressID, err))
@@ -137,7 +137,7 @@ func GetSecurityGroupPeers(ego *egoscale.Client, sgname string) ([]string, error
 	}
 
 	for _, vm := range vms {
-		if VMHasSecurityGroup(vm, sgname) {
+		if VMHasSecurityGroup(&vm, sgname) {
 			primaryIP := vm.Nic[0].IPAddress
 			peers = append(peers, fmt.Sprintf("%s:%d", primaryIP, DefaultPort))
 		}
@@ -156,7 +156,7 @@ func FindPeerNic(ego *egoscale.Client, ip string) (string, error) {
 
 	for _, vm := range vms {
 
-		if vm.Nic[0].IPAddress == ip {
+		if vm.Nic[0].IPAddress.String() == ip {
 			return vm.Nic[0].ID, nil
 		}
 	}
