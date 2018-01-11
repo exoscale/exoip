@@ -8,13 +8,9 @@ import (
 	"github.com/exoscale/egoscale"
 )
 
-func FetchMyNic(ego *egoscale.Client, mserver string) (string, error) {
+func FetchMyNic(ego *egoscale.Client, instanceId string) (string, error) {
 
-	instance_id, err := FetchMetadata(mserver, "/latest/instance-id")
-	if err != nil {
-		return "", err
-	}
-	vm_info, err := ego.GetVirtualMachine(instance_id)
+	vm_info, err := ego.GetVirtualMachine(instanceId)
 	if err != nil {
 		return "", err
 	}
@@ -26,12 +22,7 @@ func FetchMyNic(ego *egoscale.Client, mserver string) (string, error) {
 
 func (engine *Engine) FetchNicAndVm() {
 
-	mserver, err := FindMetadataServer()
-	AssertSuccess(err)
-	instance_id, err := FetchMetadata(mserver, "/latest/instance-id")
-	AssertSuccess(err)
-
-	vm_info, err := engine.Exo.GetVirtualMachine(instance_id)
+	vm_info, err := engine.Exo.GetVirtualMachine(engine.InstanceID)
 	AssertSuccess(err)
 
 	if len(vm_info.Nic) < 1 {

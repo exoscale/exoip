@@ -21,6 +21,7 @@ var exo_secret = flag.String("xs", "", "Exoscale API Secret")
 var exo_endpoint = flag.String("xe", "https://api.exoscale.ch/compute", "Exoscale API Endpoint")
 var exo_sg = flag.String("G", "", "Exoscale Security Group to use to create list of peers")
 var eip = flag.String("xi", "", "Exoscale Elastic IP to watch over")
+var instance_id = flag.String("i", "", "Exoscale Instance ID of oneself")
 var verbose = flag.Bool("v", false, "Log additional information")
 var validate_config = flag.Bool("n", false, "Validate configuration and exit")
 var watch_mode = flag.Bool("W", false, "Watchdog mode")
@@ -65,6 +66,7 @@ func ParseEnvironment() {
 		EnvEquiv{Env: "IF_EXOSCALE_API_SECRET", Flag: "xs"},
 		EnvEquiv{Env: "IF_EXOSCALE_API_ENDPOINT", Flag: "xe"},
 		EnvEquiv{Env: "IF_EXOSCALE_PEER_GROUP", Flag: "G"},
+		EnvEquiv{Env: "IF_EXOSCALE_INSTANCE_ID", Flag: "i"},
 		EnvEquiv{Env: "IF_EXOSCALE_PEERS", Flag: "p"},
 	}
 
@@ -184,20 +186,33 @@ func main() {
 	exoip.SetupLogger(*log_stdout)
 	CheckConfiguration()
 
+	if (*instance_id) == "" {
+		mserver, err := exoip.FindMetadataServer()
+		if err != nil {
+			fmt.Fprint(os.Stderr, err)
+			os.Exit(1)
+		}
+		(*instance_id), err = exoip.FetchMetadata(mserver, "/latest/instance-id")
+		if err != nil {
+			fmt.Fprint(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
+
 	ego := egoscale.NewClient(*exo_endpoint, *exo_key, *exo_secret)
 	if *associate_mode {
-		engine := exoip.NewEngine(ego, *eip)
+		engine := exoip.NewEngine(ego, *eip, *instance_id)
 		if err := engine.ObtainNic(engine.NicId); err != nil {
-			fmt.Fprintf(os.Stderr, "%s", err)
+			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
 
 	if *dissociate_mode {
-		engine := exoip.NewEngine(ego, *eip)
+		engine := exoip.NewEngine(ego, *eip, *instance_id)
 		if err := engine.ReleaseMyNic(); err != nil {
-			fmt.Fprintf(os.Stderr, "%s", err)
+			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -214,9 +229,9 @@ func main() {
 			fmt.Fprintf(os.Stderr, "cannot build peer list from security-group: %s\n", err)
 			os.Exit(1)
 		}
-		engine = exoip.NewWatchdogEngine(ego, *eip, *timer, *prio, *dead_ratio, sgpeers)
+		engine = exoip.NewWatchdogEngine(ego, *eip, *instance_id, *timer, *prio, *dead_ratio, sgpeers)
 	} else {
-		engine = exoip.NewWatchdogEngine(ego, *eip, *timer, *prio, *dead_ratio, peers)
+		engine = exoip.NewWatchdogEngine(ego, *eip, *instance_id, *timer, *prio, *dead_ratio, peers)
 	}
 	exoip.Logger.Info("starting watchdog")
 	go engine.NetworkAdvertise()

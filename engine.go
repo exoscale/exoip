@@ -64,12 +64,10 @@ func UUIDToStr(uuidbuf []byte) string {
 	return hexuuid
 }
 
-func NewWatchdogEngine(client *egoscale.Client, ip string, interval int,
+func NewWatchdogEngine(client *egoscale.Client, ip, instance_id string, interval int,
 	prio int, dead_ratio int, peers []string) *Engine {
 
-	mserver, err := FindMetadataServer()
-	AssertSuccess(err)
-	nicid, err := FetchMyNic(client, mserver)
+	nicid, err := FetchMyNic(client, instance_id)
 	uuidbuf, err := StrToUUID(nicid)
 	AssertSuccess(err)
 	sendbuf := make([]byte, 24)
@@ -113,6 +111,7 @@ func NewWatchdogEngine(client *egoscale.Client, ip string, interval int,
 		NicId:       nicid,
 		ExoIP:       netip,
 		Exo:         client,
+		InstanceID:  instance_id,
 		InitHoldOff: CurrentTimeMillis() + (1000 * int64(dead_ratio) * int64(interval)) + SkewMillis,
 	}
 	for _, p := range peers {
@@ -121,7 +120,7 @@ func NewWatchdogEngine(client *egoscale.Client, ip string, interval int,
 	return &engine
 }
 
-func NewEngine(client *egoscale.Client, ip string) *Engine {
+func NewEngine(client *egoscale.Client, ip, instance_id string) *Engine {
 
 	netip := net.ParseIP(ip)
 	if netip == nil {
@@ -137,8 +136,9 @@ func NewEngine(client *egoscale.Client, ip string) *Engine {
 	}
 
 	engine := Engine{
-		ExoIP: netip,
-		Exo:   client,
+		ExoIP:      netip,
+		Exo:        client,
+		InstanceID: instance_id,
 	}
 	engine.FetchNicAndVm()
 	return &engine
