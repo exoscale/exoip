@@ -1,17 +1,23 @@
-FROM golang:1.9-alpine
+FROM golang:1.9-alpine3.7 as build
 
 RUN mkdir -p /app
 ADD . /app
 WORKDIR /app
 
-RUN apk --no-cache \
-        --update add \
-        --virtual build-dependencies \
-        make git \
+RUN apk add --no-cache \
+            --update \
+            --virtual build-dependencies \
+        make \
+        git \
  && cd /app \
  && make deps \
  && make build/exoip-static
 
-FROM linuxkit/ca-certificates:de21b84d9b055ad9dcecc57965b654a7a24ef8e0
-COPY --from=0 /app/build/exoip-static exoip
+
+FROM alpine:3.7
+COPY --from=build /app/build/exoip-static exoip
+RUN apk add --no-cache \
+        ca-certificates \
+        iproute2
+
 ENTRYPOINT ["./exoip", "-O"]
