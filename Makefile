@@ -1,4 +1,4 @@
-VERSION=0.3.4-snapshot
+VERSION=0.3.4
 PKG=exoip
 
 MAIN=cmd/$(PKG).go
