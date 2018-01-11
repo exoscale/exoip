@@ -58,6 +58,8 @@ environment variable:
         Host priority (lowest wins) (default 10, maximum 255)
     -l string (or IF_BIND_ADDRESS)
         Address to bind to (default ":12345")
+    -i string (or IF_EXOSCALE_INSTANCE_ID)
+        Instance ID of one self (useful when running from a container)
     -p string (or IF_EXOSCALE_PEERS)
         peers to communicate with (may be repeated and/or comma-separated)
     -G string (or IF_EXOSCALE_PEER_GROUP)
