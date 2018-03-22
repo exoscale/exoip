@@ -13,9 +13,30 @@
   packages = ["."]
   revision = "7e38e58719c33e0d44d585c4ab477a30f8cb82dd"
 
+[[projects]]
+  name = "github.com/vishvananda/netlink"
+  packages = [
+    ".",
+    "nl"
+  ]
+  revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/vishvananda/netns"
+  packages = ["."]
+  revision = "be1fbeda19366dea804f00efff2dd73a1642fdcc"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix"]
+  revision = "91ee8cde435411ca3f1cd365e8f20131aed4d0a1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "66e990fb54bd1182c42522dc739b57f9db8f382c91c628f69a5fa9526c576455"
+  inputs-digest = "840aad15465523d353e121a684463c5f69c3a71603b05c02360e95aa745cb62a"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -4,23 +4,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os/exec"
-	"strings"
+
+	"github.com/vishvananda/netlink"
 )
 
 // FindMetadataServer finds the Virtual Router / Metadata server IP address
 func FindMetadataServer() (string, error) {
-
-	out, err := exec.Command("ip", "route", "list").Output()
+	links, err := netlink.LinkList()
 	if err != nil {
-		fmt.Println("could not execute:", err)
+		return "", err
 	}
-	lines := strings.Split(string(out), "\n")
-	for _, line := range lines {
-		if strings.HasPrefix(line, "default via ") {
-			params := strings.Split(line, " ")
-			return params[2], nil
+
+	for _, link := range links {
+		if link.Attrs().EncapType != "ether" {
+			continue
 		}
+
+		routes, err := netlink.RouteList(link, netlink.FAMILY_V4)
+		if err != nil {
+			return "", err
+		}
+
+		for _, route := range routes {
+			// The default route has Dst set to nil
+			if route.Dst == nil && route.Gw != nil {
+				return route.Gw.String(), nil
+			}
+		}
+
 	}
 	return "", fmt.Errorf("could not find metadata server")
 }

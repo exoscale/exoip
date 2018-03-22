@@ -1,4 +1,4 @@
-FROM golang:1.9-alpine3.7 as build
+FROM golang:1.10-alpine3.7 as build
 
 LABEL org.label-schema.name="ExoIP" \
       org.label-schema.description="IP watchdog" \
@@ -23,7 +23,6 @@ RUN apk add --no-cache \
 FROM alpine:3.7
 COPY --from=build /go/bin/exoip exoip
 RUN apk add --no-cache \
-        ca-certificates \
-        iproute2
+        ca-certificates
 
 ENTRYPOINT ["./exoip", "-O"]
