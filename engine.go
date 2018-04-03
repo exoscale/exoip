@@ -155,22 +155,3 @@ func NewEngine(client *egoscale.Client, ip, instanceID string) *Engine {
 	engine.FetchNicAndVM()
 	return &engine
 }
-
-func getVirtualMachine(cs *egoscale.Client, instanceID string) (*egoscale.VirtualMachine, error) {
-	resp, err := cs.Request(&egoscale.ListVirtualMachines{
-		ID: instanceID,
-	})
-	if err != nil {
-		return nil, err
-	}
-	vm := resp.(*egoscale.ListVirtualMachinesResponse).VirtualMachine[0]
-	return &vm, nil
-}
-
-func listVirtualMachines(cs *egoscale.Client) ([]egoscale.VirtualMachine, error) {
-	resp, err := cs.Request(&egoscale.ListVirtualMachines{})
-	if err != nil {
-		return nil, err
-	}
-	return resp.(*egoscale.ListVirtualMachinesResponse).VirtualMachine, nil
-}
