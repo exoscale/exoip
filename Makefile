@@ -61,4 +61,8 @@ signature: $(BINS)
 
 .PHONY: docker
 docker:
-	docker build --tag exoscale/exoip:$(shell git rev-parse --short HEAD) .
+	docker build --tag exoscale/exoip:$(VERSION) .
+
+.PHONY: internal-docker
+internal-docker:
+	docker build --tag registry.internal.exoscale.ch/exoscale/exoip:$(VERSION) .
