@@ -21,9 +21,10 @@ func NewPeer(ego *egoscale.Client, peer string) *Peer {
 
 // FindPeer finds a peer by IP
 func (engine *Engine) FindPeer(addr net.UDPAddr) *Peer {
-	for _, p := range engine.Peers {
-		if p.IP.Equal(addr.IP) {
-			return p
+	for i, _ := range engine.Peers {
+		peer := engine.Peers[i]
+		if peer.IP != nil && peer.IP.Equal(addr.IP) {
+			return engine.Peers[i]
 		}
 	}
 	return nil
@@ -37,14 +38,14 @@ func (engine *Engine) UpdatePeer(addr net.UDPAddr, payload *Payload) {
 		return
 	}
 
-	peer := engine.FindPeer(addr)
-	if peer == nil {
-		Logger.Warning("peer not found in configuration")
+	if peer := engine.FindPeer(addr); peer != nil {
+		peer.Priority = payload.Priority
+		peer.NicID = payload.NicID
+		peer.LastSeen = CurrentTimeMillis()
 		return
 	}
-	peer.Priority = payload.Priority
-	peer.NicID = payload.NicID
-	peer.LastSeen = currentTimeMillis()
+
+	Logger.Warning("peer not found in configuration")
 }
 
 // PeerIsNewlyDead contains the logic to say if the peer is considered dead

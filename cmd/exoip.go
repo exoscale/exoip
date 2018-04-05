@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/exoscale/egoscale"
 	"github.com/exoscale/exoip"
@@ -263,9 +264,22 @@ func main() {
 	} else {
 		engine = exoip.NewWatchdogEngine(ego, *eip, *instanceID, *timer, *prio, *deadRatio, peers)
 	}
-	exoip.Logger.Info("starting watchdog")
-	go engine.NetworkAdvertise()
-	engine.NetworkLoop(*address)
 
+	go func() {
+		// pings every interval our peers
+		for {
+			time.Sleep(time.Duration(engine.Interval) * time.Second)
+			for _, peer := range engine.Peers {
+				// do not account for errors
+				peer.Conn.Write(engine.SendBuf)
+			}
+			engine.LastSend = exoip.CurrentTimeMillis()
+
+			engine.CheckState()
+		}
+	}()
+
+	exoip.Logger.Info("starting watchdog")
+	engine.NetworkLoop(*address)
 	os.Exit(0)
 }

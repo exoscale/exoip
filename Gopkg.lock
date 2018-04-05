@@ -5,7 +5,7 @@
   branch = "list-vms"
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "4b0ea3d0c3d7441b8e76d54a18a09607b89f9f66"
+  revision = "6481b8b399087ea2632a7b2e0264a255e54bb332"
 
 [[projects]]
   branch = "master"
@@ -32,7 +32,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "f67933eaf9e2f750f58a234209a11ebc1107be38"
+  revision = "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e"
 
 [solve-meta]
   analyzer-name = "dep"

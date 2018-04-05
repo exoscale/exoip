@@ -3,19 +3,31 @@ package exoip
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net"
 	"os"
-	"time"
 )
 
-func bufToPayload(buf []byte) (*Payload, error) {
+const payloadLength = 24
+
+// NewPayload builds a Payload from a raw buffer (length of 24)
+//
+// The layout of the payload is as follows:
+//
+//      2bytes  2bytes  4 bytes         16 bytes
+//     +-------+-------+---------------+-------------------------------+
+//     | PROTO | PRIO  |    EIP        |   NicID (128bit UUID)         |
+//     +-------+-------+---------------+-------------------------------+
+//
+func NewPayload(buf []byte) (*Payload, error) {
 	protobuf := make([]byte, 2)
 	protobuf = buf[0:2]
 	uuidbuf := make([]byte, 16)
 	uuidbuf = buf[8:24]
 
-	if ProtoVersion != hex.EncodeToString(protobuf) {
-		Logger.Warning("bad protocol version")
+	version := hex.EncodeToString(protobuf)
+	if ProtoVersion != version {
+		Logger.Warning(fmt.Sprintf("bad protocol version, got %d", version))
 		return nil, errors.New("bad protocol version")
 	}
 
@@ -24,8 +36,13 @@ func bufToPayload(buf []byte) (*Payload, error) {
 		return nil, errors.New("bad payload (priority should repeat)")
 	}
 
-	ip := net.IPv4(buf[4], buf[5], buf[6], buf[7])
-	return &Payload{NicID: UUIDToStr(uuidbuf), Priority: buf[2], ExoIP: ip}, nil
+	payload := &Payload{
+		NicID:    UUIDToStr(uuidbuf),
+		Priority: buf[2],
+		ExoIP:    net.IPv4(buf[4], buf[5], buf[6], buf[7]),
+	}
+
+	return payload, nil
 }
 
 // NetworkLoop starts the UDP server
@@ -34,38 +51,24 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 	AssertSuccess(err)
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
 	AssertSuccess(err)
-	buf := make([]byte, 24)
+
+	buf := make([]byte, payloadLength)
 	for {
 		n, addr, err := ServerConn.ReadFromUDP(buf)
 		if err != nil {
 			Logger.Crit("network server died")
 			os.Exit(1)
-
 		}
-		if n != 24 {
+
+		if n != payloadLength {
 			Logger.Warning("bad network payload")
-
 		}
-		payload, err := bufToPayload(buf)
+
+		payload, err := NewPayload(buf)
 		if err != nil {
 			Logger.Warning("unparseable payload")
 		} else {
 			engine.UpdatePeer(*addr, payload)
 		}
-	}
-}
-
-// NetworkAdvertise pings every interval our peers
-func (engine *Engine) NetworkAdvertise() {
-	for {
-		time.Sleep(time.Duration(engine.Interval) * time.Second)
-		go func() {
-			for _, peer := range engine.Peers {
-				/* do not account for errors */
-				peer.Conn.Write(engine.SendBuf)
-			}
-			engine.LastSend = currentTimeMillis()
-		}()
-		go engine.CheckState()
 	}
 }

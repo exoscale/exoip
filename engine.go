@@ -112,7 +112,7 @@ func NewWatchdogEngine(client *egoscale.Client, ip, instanceID string, interval 
 		sendbuf[i+8] = b
 	}
 
-	engine := Engine{
+	engine := &Engine{
 		DeadRatio:   deadRatio,
 		Interval:    interval,
 		Priority:    sendbuf[2],
@@ -123,12 +123,12 @@ func NewWatchdogEngine(client *egoscale.Client, ip, instanceID string, interval 
 		ExoIP:       netip,
 		Exo:         client,
 		InstanceID:  instanceID,
-		InitHoldOff: currentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
+		InitHoldOff: CurrentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
 	}
 	for _, p := range peers {
 		engine.Peers = append(engine.Peers, NewPeer(client, p))
 	}
-	return &engine
+	return engine
 }
 
 // NewEngine creates a new engine
@@ -147,11 +147,11 @@ func NewEngine(client *egoscale.Client, ip, instanceID string) *Engine {
 		os.Exit(1)
 	}
 
-	engine := Engine{
+	engine := &Engine{
 		ExoIP:      netip,
 		Exo:        client,
 		InstanceID: instanceID,
 	}
 	engine.FetchNicAndVM()
-	return &engine
+	return engine
 }

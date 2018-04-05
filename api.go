@@ -72,7 +72,7 @@ func (engine *Engine) ReleaseMyNic() error {
 	}
 
 	if err := engine.Exo.Get(vm); err != nil {
-		Logger.Crit(fmt.Sprintf("could not remove ip from nic: could get virtualmachine: %s", err))
+		Logger.Crit(fmt.Sprintf("could not get virtualmachine: %s. %s", vm.ID, err))
 		return err
 	}
 
@@ -80,6 +80,10 @@ func (engine *Engine) ReleaseMyNic() error {
 	nic := vm.DefaultNic()
 	if nic != nil {
 		for _, secIP := range nic.SecondaryIP {
+			if secIP.IPAddress == nil {
+				continue
+			}
+
 			if secIP.IPAddress.String() == engine.ExoIP.String() {
 				nicAddressID = secIP.ID
 				break
@@ -96,8 +100,8 @@ func (engine *Engine) ReleaseMyNic() error {
 		ID: nicAddressID,
 	}
 	if err := engine.Exo.BooleanRequest(req); err != nil {
-		Logger.Crit(fmt.Sprintf("could not dissociate ip %s: %s",
-			engine.ExoIP.String(), err))
+		Logger.Crit(fmt.Sprintf("could not dissociate ip %s (%s): %s",
+			engine.ExoIP.String(), nicAddressID, err))
 		return err
 	}
 
@@ -106,13 +110,13 @@ func (engine *Engine) ReleaseMyNic() error {
 }
 
 // ReleaseNic removes the Elastic IP from the given NIC
-func (engine *Engine) ReleaseNic(nicID string) {
+func (engine *Engine) ReleaseNic(nicID string) error {
 
 	vms, err := engine.Exo.List(new(egoscale.VirtualMachine))
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not remove ip from nic: could not list virtualmachines: %s",
 			err))
-		return
+		return err
 	}
 
 	nicAddressID := ""
@@ -131,15 +135,18 @@ func (engine *Engine) ReleaseNic(nicID string) {
 
 	if len(nicAddressID) == 0 {
 		Logger.Warning("could not remove ip from nic: unknown association")
-		return
+		return fmt.Errorf("")
 	}
 
 	req := &egoscale.RemoveIPFromNic{ID: nicAddressID}
 	if err := engine.Exo.BooleanRequest(req); err != nil {
 		Logger.Crit(fmt.Sprintf("could not remove ip from nic %s (%s): %s",
 			nicID, nicAddressID, err))
+		return err
 	}
+
 	Logger.Info(fmt.Sprintf("released ip %s from nic %s", engine.ExoIP.String(), nicID))
+	return nil
 }
 
 // VMHasSecurityGroup tells whether the VM has any security groups

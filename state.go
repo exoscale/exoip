@@ -1,20 +1,9 @@
 package exoip
 
 import (
+	"fmt"
 	"time"
 )
-
-// SwitchToBackup switches the state to backup mode
-func (engine *Engine) SwitchToBackup() {
-	Logger.Warning("switching to back-up state")
-	engine.ReleaseNic(engine.NicID)
-}
-
-// SwitchToMaster switches the state to master mode
-func (engine *Engine) SwitchToMaster() {
-	Logger.Warning("switching to master state")
-	engine.ObtainNic(engine.NicID)
-}
 
 // PerformStateTransition transition to the given state
 func (engine *Engine) PerformStateTransition(state State) {
@@ -23,13 +12,21 @@ func (engine *Engine) PerformStateTransition(state State) {
 		return
 	}
 
-	engine.State = state
+	Logger.Info(fmt.Sprintf("swiching state to %s", state))
 
+	var err error
 	if state == StateBackup {
-		engine.SwitchToBackup()
+		err = engine.ReleaseNic(engine.NicID)
 	} else {
-		engine.SwitchToMaster()
+		err = engine.ObtainNic(engine.NicID)
 	}
+
+	if err != nil {
+		Logger.Crit(fmt.Sprintf("could not switch state. %s", err))
+		return
+	}
+
+	engine.State = state
 }
 
 // CheckState updates the states of our peers
@@ -37,7 +34,7 @@ func (engine *Engine) CheckState() {
 
 	time.Sleep(Skew)
 
-	now := currentTimeMillis()
+	now := CurrentTimeMillis()
 
 	if now <= engine.InitHoldOff {
 		return
@@ -56,10 +53,10 @@ func (engine *Engine) CheckState() {
 		}
 	}
 
-	if bestAdvertisement == false {
-		engine.PerformStateTransition(StateBackup)
-	} else {
+	if bestAdvertisement {
 		engine.PerformStateTransition(StateMaster)
+	} else {
+		engine.PerformStateTransition(StateBackup)
 	}
 
 	for _, peer := range deadPeers {

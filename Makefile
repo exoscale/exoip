@@ -19,21 +19,23 @@ GOPATH=$(CURDIR)/.gopath
 DEP=$(GOPATH)/bin/dep
 
 export GOPATH
+export PATH := $(PATH):$(GOPATH)/bin
 
 RM?=rm -f
 
 all: $(BIN)
 
+$(GOPATH)/src/$(PKG):
+	mkdir -p $(GOPATH)
+	go get -u github.com/golang/dep/cmd/dep
+	go get -u golang.org/x/tools/cmd/stringer
+	mkdir -p $(shell dirname $(GOPATH)/src/$(PKG))
+	ln -sf ../../../.. $(GOPATH)/src/$(PKG)
+
 .phony: deps
 deps: $(GOPATH)/src/$(PKG)
 	(cd $(GOPATH)/src/$(PKG) && \
 		$(DEP) ensure)
-
-$(GOPATH)/src/$(PKG):
-	mkdir -p $(GOPATH)
-	go get -u github.com/golang/dep/cmd/dep
-	mkdir -p $(shell dirname $(GOPATH)/src/$(PKG))
-	ln -sf ../../../.. $(GOPATH)/src/$(PKG)
 
 .phony: deps-update
 deps-update: deps
@@ -42,10 +44,12 @@ deps-update: deps
 
 $(BIN): $(CLI) $(SRCS)
 	(cd $(GOPATH)/src/$(PKG) && \
+		go generate && \
 		go build -o $@ $<)
 
 $(BIN)-static: $(CLI) $(SRCS)
 	(cd $(GOPATH)/src/$(PKG) && \
+		go generate && \
 		CGO_ENABLED=0 GOOS=$(GIMME_OS) GOARCH=$(GIMME_ARCH) \
 		go build -ldflags "-s" -o $@ $<)
 
