@@ -37,11 +37,11 @@ func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
 }
 
 // getSecurityGroupPeers returns the other machines within the same security group
-func getSecurityGroupPeers(client *egoscale.Client, zoneId string, securityGroupName string) ([]string, error) {
+func getSecurityGroupPeers(client *egoscale.Client, zoneID string, securityGroupName string) ([]string, error) {
 
 	peers := make([]string, 0)
 	vms, err := client.List(&egoscale.VirtualMachine{
-		ZoneID: zoneId,
+		ZoneID: zoneID,
 	})
 
 	if err != nil {

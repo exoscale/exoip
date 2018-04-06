@@ -27,7 +27,7 @@ func NewPayload(buf []byte) (*Payload, error) {
 
 	version := hex.EncodeToString(protobuf)
 	if ProtoVersion != version {
-		Logger.Warning(fmt.Sprintf("bad protocol version, got %d", version))
+		Logger.Warning(fmt.Sprintf("bad protocol version, got %v", version))
 		return nil, errors.New("bad protocol version")
 	}
 
@@ -36,13 +36,13 @@ func NewPayload(buf []byte) (*Payload, error) {
 		return nil, errors.New("bad payload (priority should repeat)")
 	}
 
-	nicId, err := UUIDToStr(uuidbuf)
+	nicID, err := UUIDToStr(uuidbuf)
 	if err != nil {
 		return nil, err
 	}
 
 	payload := &Payload{
-		NicID:    nicId,
+		NicID:    nicID,
 		Priority: buf[2],
 		IP:       net.IPv4(buf[4], buf[5], buf[6], buf[7]),
 	}
@@ -56,7 +56,7 @@ func UUIDToStr(buf []byte) (string, error) {
 		return "", fmt.Errorf("UUID length (%d) mismatch, need 16", len(buf))
 	}
 
-	uuid := fmt.Sprintf("%x-%x-%x-%x", buf[0:4], buf[4:6], buf[6:8], buf[8:10], buf[10:16])
+	uuid := fmt.Sprintf("%x-%x-%x-%x-%x", buf[0:4], buf[4:6], buf[6:8], buf[8:10], buf[10:16])
 
 	return uuid, nil
 }

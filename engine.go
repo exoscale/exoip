@@ -302,7 +302,7 @@ func (engine *Engine) ReleaseNic(nicID string) error {
 	return nil
 }
 
-// RefreshPeers refreshes the list of the peers based on the security group
+// UpdatePeers refreshes the list of the peers based on the security group
 func (engine *Engine) UpdatePeers() error {
 	if engine.SecurityGroupName == "" {
 		// skip
