@@ -7,20 +7,22 @@ import (
 	"github.com/exoscale/egoscale"
 )
 
-// FetchMyNic fetches the nic of the current instance
-func FetchMyNic(ego *egoscale.Client, instanceID string) (string, error) {
+// fetchMyInfo fetches the nic of the current instance
+func fetchMyInfo(ego *egoscale.Client, instanceID string) (string, string, error) {
 
-	vmInfo := &egoscale.VirtualMachine{
+	vm := &egoscale.VirtualMachine{
 		ID: instanceID,
 	}
-	if err := ego.Get(vmInfo); err != nil {
-		return "", err
+	if err := ego.Get(vm); err != nil {
+		return "", "", err
 	}
-	nic := vmInfo.DefaultNic()
+
+	nic := vm.DefaultNic()
 	if nic == nil {
-		return "", errors.New("cannot find virtual machine Nic ID")
+		return "", "", errors.New("cannot find virtual machine default nic")
 	}
-	return nic.ID, nil
+
+	return vm.ZoneID, nic.ID, nil
 }
 
 // VMHasSecurityGroup tells whether the VM has any security groups

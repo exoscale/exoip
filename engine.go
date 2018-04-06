@@ -32,9 +32,12 @@ var Logger *wrappedLogger
 func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval int,
 	prio int, deadRatio int, peers []string, securityGroupName string) *Engine {
 
-	nicid, err := FetchMyNic(client, instanceID)
-	uuidbuf, err := StrToUUID(nicid)
+	zoneID, nicID, err := fetchMyInfo(client, instanceID)
 	assertSuccess(err)
+
+	uuidbuf, err := StrToUUID(nicID)
+	assertSuccess(err)
+
 	sendbuf := make([]byte, 24)
 	protobuf, err := hex.DecodeString(ProtoVersion)
 	assertSuccess(err)
@@ -75,9 +78,10 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 		Peers:             make(map[string]*Peer),
 		SecurityGroupName: securityGroupName,
 		State:             StateBackup,
-		NicID:             nicid,
+		NicID:             nicID,
 		ElasticIP:         netip,
 		VirtualMachineID:  instanceID,
+		ZoneID:            zoneID,
 		InitHoldOff:       CurrentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
 	}
 
@@ -146,7 +150,7 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 
 // FetchPeer fetches a Peer from its IP address
 func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
-	addr, err := net.ResolveUDPAddr("udp", peerAddress)
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", peerAddress, DefaultPort))
 	if err != nil {
 		return nil, err
 	}
@@ -311,6 +315,7 @@ func (engine *Engine) UpdatePeers() error {
 		ZoneID: engine.ZoneID,
 	}
 
+	Logger.Info(fmt.Sprintf("Updating peers %s (%s)", engine.SecurityGroupName, engine.ZoneID))
 	vms, err := client.List(vm)
 	if err != nil {
 		return err
@@ -325,8 +330,8 @@ func (engine *Engine) UpdatePeers() error {
 		}
 
 		ip := vm.IP()
-		if ip != nil {
-			return fmt.Errorf("VM %s has not IP address", vm.ID)
+		if ip == nil {
+			continue
 		}
 
 		for _, sg := range vm.SecurityGroup {
@@ -334,13 +339,16 @@ func (engine *Engine) UpdatePeers() error {
 				continue
 			}
 
-			if _, ok := engine.Peers[ip.String()]; !ok {
+			key := ip.String()
+			if _, ok := engine.Peers[key]; !ok {
 				// add peer
-				addr, err := net.ResolveUDPAddr("udp", ip.String())
+				addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", key, DefaultPort))
 				if err != nil {
+					Logger.Warning(err.Error())
 					return err
 				}
-				engine.Peers[vm.ID] = NewPeer(addr, vm.ID, vm.DefaultNic().ID)
+
+				engine.Peers[key] = NewPeer(addr, vm.ID, vm.DefaultNic().ID)
 			}
 		}
 	}
