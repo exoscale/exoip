@@ -1,6 +1,8 @@
 package exoip
 
 import (
+	"log"
+	"log/syslog"
 	"net"
 
 	"github.com/exoscale/egoscale"
@@ -21,6 +23,12 @@ type Payload struct {
 	Priority byte
 	ExoIP    net.IP
 	NicID    string
+}
+
+type wrappedLogger struct {
+	syslog       bool
+	syslogWriter *syslog.Writer
+	stdWriter    *log.Logger
 }
 
 //go:generate stringer -type=State

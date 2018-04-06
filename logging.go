@@ -7,15 +7,6 @@ import (
 	"os"
 )
 
-type wrappedLogger struct {
-	syslog       bool
-	syslogWriter *syslog.Writer
-	stdWriter    *log.Logger
-}
-
-// Logger represents a wrapped version of syslog
-var Logger *wrappedLogger
-
 // Warning logs a message with severity LOG_WARNING
 func (l *wrappedLogger) Warning(msg string) {
 	if l.syslog {

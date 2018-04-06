@@ -260,9 +260,9 @@ func main() {
 			fmt.Fprintf(os.Stderr, "cannot build peer list from security-group: %s\n", err)
 			os.Exit(1)
 		}
-		engine = exoip.NewWatchdogEngine(ego, *eip, *instanceID, *timer, *prio, *deadRatio, sgpeers)
+		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, sgpeers)
 	} else {
-		engine = exoip.NewWatchdogEngine(ego, *eip, *instanceID, *timer, *prio, *deadRatio, peers)
+		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, peers)
 	}
 
 	go func() {
