@@ -2,25 +2,22 @@ package exoip
 
 import (
 	"net"
-
-	"github.com/exoscale/egoscale"
 )
 
 // NewPeer creates a new peer
-func NewPeer(ego *egoscale.Client, peer string) *Peer {
-	addr, err := net.ResolveUDPAddr("udp", peer)
-	assertSuccess(err)
-
-	ip := addr.IP
-	conn, err := net.DialUDP("udp", nil, addr)
-	assertSuccess(err)
-
-	peerNic, err := FindPeerNic(ego, ip.String())
+func NewPeer(address *net.UDPAddr, id, nicID string) *Peer {
+	conn, err := net.DialUDP("udp", nil, address)
 	assertSuccess(err)
 
 	return &Peer{
-		IP:    ip,
-		NicID: peerNic,
-		Conn:  conn,
+		VirtualMachineID: id,
+		UDPAddr:          address,
+		NicID:            nicID,
+		conn:             conn,
 	}
+}
+
+// Send writes the given buf to the connection
+func (peer *Peer) Send(buf []byte) (int, error) {
+	return peer.conn.Write(buf)
 }

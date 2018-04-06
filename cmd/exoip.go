@@ -254,28 +254,31 @@ func main() {
 			fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
 			os.Exit(1)
 		}
-		sgpeers, err := exoip.GetSecurityGroupPeers(ego, *exoSecurityGroup)
-		if err != nil {
-			exoip.Logger.Crit("cannot build peer list from security-group")
-			fmt.Fprintf(os.Stderr, "cannot build peer list from security-group: %s\n", err)
-			os.Exit(1)
-		}
-		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, sgpeers)
+
+		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, nil, *exoSecurityGroup)
 	} else {
-		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, peers)
+		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, peers, "")
 	}
 
 	go func() {
 		// pings every interval our peers
+		i := 0
+
 		for {
-			time.Sleep(time.Duration(engine.Interval) * time.Second)
+			if i == 0 {
+				engine.UpdatePeers()
+			}
+
 			for _, peer := range engine.Peers {
 				// do not account for errors
-				peer.Conn.Write(engine.SendBuf)
+				peer.Send(engine.SendBuf)
 			}
 			engine.LastSend = exoip.CurrentTimeMillis()
 
 			engine.CheckState()
+
+			i = i + 1%100
+			time.Sleep(time.Duration(engine.Interval) * time.Second)
 		}
 	}()
 

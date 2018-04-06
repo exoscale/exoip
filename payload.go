@@ -44,7 +44,7 @@ func NewPayload(buf []byte) (*Payload, error) {
 	payload := &Payload{
 		NicID:    nicId,
 		Priority: buf[2],
-		ExoIP:    net.IPv4(buf[4], buf[5], buf[6], buf[7]),
+		IP:       net.IPv4(buf[4], buf[5], buf[6], buf[7]),
 	}
 
 	return payload, nil

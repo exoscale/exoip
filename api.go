@@ -34,18 +34,22 @@ func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
 	return false
 }
 
-// GetSecurityGroupPeers returns the other machines within the same security group
-func GetSecurityGroupPeers(ego *egoscale.Client, sgname string) ([]string, error) {
+// getSecurityGroupPeers returns the other machines within the same security group
+func getSecurityGroupPeers(client *egoscale.Client, zoneId string, securityGroupName string) ([]string, error) {
 
 	peers := make([]string, 0)
-	vms, err := ego.List(new(egoscale.VirtualMachine))
+	vms, err := client.List(&egoscale.VirtualMachine{
+		ZoneID: zoneId,
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
 	for _, i := range vms {
 		vm := i.(egoscale.VirtualMachine)
-		if VMHasSecurityGroup(&vm, sgname) {
+
+		if VMHasSecurityGroup(&vm, securityGroupName) {
 			nic := vm.DefaultNic()
 			if nic != nil && nic.IPAddress != nil {
 				primaryIP := nic.IPAddress.String()

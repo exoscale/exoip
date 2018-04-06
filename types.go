@@ -10,18 +10,19 @@ import (
 
 // Peer represents a peer machine
 type Peer struct {
-	IP       net.IP
-	Dead     bool
-	Priority byte
-	LastSeen int64
-	NicID    string
-	Conn     *net.UDPConn
+	VirtualMachineID string
+	UDPAddr          *net.UDPAddr
+	Dead             bool
+	Priority         byte
+	LastSeen         int64
+	NicID            string
+	conn             *net.UDPConn
 }
 
 // Payload represents a message of our protocol
 type Payload struct {
 	Priority byte
-	ExoIP    net.IP
+	IP       net.IP
 	NicID    string
 }
 
@@ -45,18 +46,18 @@ const (
 
 // Engine represents the ExoIP engine structure
 type Engine struct {
-	DeadRatio        int
-	Interval         int
-	Priority         byte
-	VHID             byte
-	SendBuf          []byte
-	Peers            []*Peer
-	State            State
-	LastSend         int64
-	InitHoldOff      int64
-	VirtualMachineID string
-	NicID            string
-	ExoIP            net.IP
-	Exo              *egoscale.Client
-	InstanceID       string
+	client            *egoscale.Client
+	DeadRatio         int
+	Interval          int
+	Priority          byte
+	SendBuf           []byte
+	Peers             map[string]*Peer
+	State             State
+	LastSend          int64
+	InitHoldOff       int64
+	ElasticIP         net.IP
+	VirtualMachineID  string
+	SecurityGroupName string
+	NicID             string
+	ZoneID            string
 }

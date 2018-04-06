@@ -30,7 +30,7 @@ var Logger *wrappedLogger
 
 // NewEngineWatchdog creates an new watchdog engine
 func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval int,
-	prio int, deadRatio int, peers []string) *Engine {
+	prio int, deadRatio int, peers []string, securityGroupName string) *Engine {
 
 	nicid, err := FetchMyNic(client, instanceID)
 	uuidbuf, err := StrToUUID(nicid)
@@ -67,28 +67,34 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 	}
 
 	engine := &Engine{
-		DeadRatio:   deadRatio,
-		Interval:    interval,
-		Priority:    sendbuf[2],
-		SendBuf:     sendbuf,
-		Peers:       make([]*Peer, 0),
-		State:       StateBackup,
-		NicID:       nicid,
-		ExoIP:       netip,
-		Exo:         client,
-		InstanceID:  instanceID,
-		InitHoldOff: CurrentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
+		client:            client,
+		DeadRatio:         deadRatio,
+		Interval:          interval,
+		Priority:          sendbuf[2],
+		SendBuf:           sendbuf,
+		Peers:             make(map[string]*Peer),
+		SecurityGroupName: securityGroupName,
+		State:             StateBackup,
+		NicID:             nicid,
+		ElasticIP:         netip,
+		VirtualMachineID:  instanceID,
+		InitHoldOff:       CurrentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
 	}
-	for _, p := range peers {
-		engine.Peers = append(engine.Peers, NewPeer(client, p))
+
+	for _, peerAddress := range peers {
+		peer, err := engine.FetchPeer(peerAddress)
+		assertSuccess(err)
+
+		engine.Peers[peerAddress] = peer
 	}
+
 	return engine
 }
 
 // NewEngine creates a new engine
-func NewEngine(client *egoscale.Client, ip, instanceID string) *Engine {
+func NewEngine(client *egoscale.Client, ipAddress, instanceID string) *Engine {
 
-	netip := net.ParseIP(ip)
+	netip := net.ParseIP(ipAddress)
 	if netip == nil {
 		Logger.Crit("Could not parse IP")
 		fmt.Fprintln(os.Stderr, "Could not parse IP")
@@ -102,9 +108,9 @@ func NewEngine(client *egoscale.Client, ip, instanceID string) *Engine {
 	}
 
 	engine := &Engine{
-		ExoIP:      netip,
-		Exo:        client,
-		InstanceID: instanceID,
+		ElasticIP:        netip,
+		client:           client,
+		VirtualMachineID: instanceID,
 	}
 	engine.FetchNicAndVM()
 	return engine
@@ -138,54 +144,82 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 	}
 }
 
+// FetchPeer fetches a Peer from its IP address
+func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
+	addr, err := net.ResolveUDPAddr("udp", peerAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	client := engine.client
+	vm := &egoscale.VirtualMachine{
+		Nic: []egoscale.Nic{{
+			IPAddress: addr.IP,
+			IsDefault: true,
+		}},
+		ZoneID: engine.ZoneID,
+	}
+
+	if err := client.Get(vm); err != nil {
+		return nil, err
+	}
+
+	nic := vm.DefaultNic()
+	if nic == nil {
+		return nil, fmt.Errorf("Peer (%v) has no default nic", peerAddress)
+	}
+
+	return NewPeer(addr, vm.ID, nic.ID), nil
+}
+
 // FetchNicAndVM fetches our NIC and the VirtualMachine
 func (engine *Engine) FetchNicAndVM() {
+	client := engine.client
 
-	vmInfo := &egoscale.VirtualMachine{
-		ID: engine.InstanceID,
+	vm := &egoscale.VirtualMachine{
+		ID: engine.VirtualMachineID,
 	}
-
-	err := engine.Exo.Get(vmInfo)
+	err := client.Get(vm)
 	assertSuccess(err)
 
-	nic := vmInfo.DefaultNic()
+	nic := vm.DefaultNic()
 	if nic == nil {
-		Logger.Crit("cannot find virtual machine Nic ID")
-		fmt.Fprintln(os.Stderr, "cannot find virtual machine Nic ID")
-		os.Exit(1)
+		assertSuccess(fmt.Errorf("cannot find virtua machine default nic"))
 	}
 
-	engine.VirtualMachineID = vmInfo.ID
 	engine.NicID = nic.ID
 }
 
 // ObtainNic add the elastic IP to the given NIC
 func (engine *Engine) ObtainNic(nicID string) error {
+	client := engine.client
 
-	_, err := engine.Exo.Request(&egoscale.AddIPToNic{
+	_, err := client.Request(&egoscale.AddIPToNic{
 		NicID:     nicID,
-		IPAddress: engine.ExoIP,
+		IPAddress: engine.ElasticIP,
 	})
 
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not add ip %s to nic %s: %s",
-			engine.ExoIP.String(),
+			engine.ElasticIP,
 			nicID,
 			err))
 		return err
 	}
 
-	Logger.Info(fmt.Sprintf("claimed ip %s on nic %s", engine.ExoIP.String(), nicID))
+	Logger.Info(fmt.Sprintf("claimed ip %s on nic %s", engine.ElasticIP.String(), nicID))
 	return nil
 }
 
 // ReleaseMyNic releases the elastic IP from the NIC
 func (engine *Engine) ReleaseMyNic() error {
+	client := engine.client
+
 	vm := &egoscale.VirtualMachine{
 		ID: engine.VirtualMachineID,
 	}
 
-	if err := engine.Exo.Get(vm); err != nil {
+	if err := client.Get(vm); err != nil {
 		Logger.Crit(fmt.Sprintf("could not get virtualmachine: %s. %s", vm.ID, err))
 		return err
 	}
@@ -198,7 +232,7 @@ func (engine *Engine) ReleaseMyNic() error {
 				continue
 			}
 
-			if secIP.IPAddress.String() == engine.ExoIP.String() {
+			if secIP.IPAddress.String() == engine.ElasticIP.String() {
 				nicAddressID = secIP.ID
 				break
 			}
@@ -213,20 +247,21 @@ func (engine *Engine) ReleaseMyNic() error {
 	req := &egoscale.RemoveIPFromNic{
 		ID: nicAddressID,
 	}
-	if err := engine.Exo.BooleanRequest(req); err != nil {
+	if err := client.BooleanRequest(req); err != nil {
 		Logger.Crit(fmt.Sprintf("could not dissociate ip %s (%s): %s",
-			engine.ExoIP.String(), nicAddressID, err))
+			engine.ElasticIP.String(), nicAddressID, err))
 		return err
 	}
 
-	Logger.Info(fmt.Sprintf("released ip %s", engine.ExoIP.String()))
+	Logger.Info(fmt.Sprintf("released ip %s", engine.ElasticIP.String()))
 	return nil
 }
 
 // ReleaseNic removes the Elastic IP from the given NIC
 func (engine *Engine) ReleaseNic(nicID string) error {
+	client := engine.client
 
-	vms, err := engine.Exo.List(new(egoscale.VirtualMachine))
+	vms, err := client.List(new(egoscale.VirtualMachine))
 	if err != nil {
 		Logger.Crit(fmt.Sprintf("could not remove ip from nic: could not list virtualmachines: %s",
 			err))
@@ -239,7 +274,7 @@ func (engine *Engine) ReleaseNic(nicID string) error {
 		nic := vm.DefaultNic()
 		if nic != nil && nic.ID == nicID {
 			for _, secIP := range nic.SecondaryIP {
-				if secIP.IPAddress.String() == engine.ExoIP.String() {
+				if secIP.IPAddress.String() == engine.ElasticIP.String() {
 					nicAddressID = secIP.ID
 					break
 				}
@@ -253,36 +288,75 @@ func (engine *Engine) ReleaseNic(nicID string) error {
 	}
 
 	req := &egoscale.RemoveIPFromNic{ID: nicAddressID}
-	if err := engine.Exo.BooleanRequest(req); err != nil {
+	if err := client.BooleanRequest(req); err != nil {
 		Logger.Crit(fmt.Sprintf("could not remove ip from nic %s (%s): %s",
 			nicID, nicAddressID, err))
 		return err
 	}
 
-	Logger.Info(fmt.Sprintf("released ip %s from nic %s", engine.ExoIP.String(), nicID))
+	Logger.Info(fmt.Sprintf("released ip %s from nic %s", engine.ElasticIP.String(), nicID))
 	return nil
 }
 
-// FindPeer finds a peer by IP
-func (engine *Engine) FindPeer(addr net.UDPAddr) *Peer {
-	for i, _ := range engine.Peers {
-		peer := engine.Peers[i]
-		if peer.IP != nil && peer.IP.Equal(addr.IP) {
-			return engine.Peers[i]
+// RefreshPeers refreshes the list of the peers based on the security group
+func (engine *Engine) UpdatePeers() error {
+	if engine.SecurityGroupName == "" {
+		// skip
+		return nil
+	}
+
+	client := engine.client
+	vm := &egoscale.VirtualMachine{
+		State:  "Running",
+		ZoneID: engine.ZoneID,
+	}
+
+	vms, err := client.List(vm)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range vms {
+		vm := v.(egoscale.VirtualMachine)
+
+		// skip self
+		if vm.ID == engine.VirtualMachineID {
+			continue
+		}
+
+		ip := vm.IP()
+		if ip != nil {
+			return fmt.Errorf("VM %s has not IP address", vm.ID)
+		}
+
+		for _, sg := range vm.SecurityGroup {
+			if sg.Name != engine.SecurityGroupName {
+				continue
+			}
+
+			if _, ok := engine.Peers[ip.String()]; !ok {
+				// add peer
+				addr, err := net.ResolveUDPAddr("udp", ip.String())
+				if err != nil {
+					return err
+				}
+				engine.Peers[vm.ID] = NewPeer(addr, vm.ID, vm.DefaultNic().ID)
+			}
 		}
 	}
+
 	return nil
 }
 
 // UpdatePeer update the state of the given peer
 func (engine *Engine) UpdatePeer(addr net.UDPAddr, payload *Payload) {
 
-	if !engine.ExoIP.Equal(payload.ExoIP) {
+	if !engine.ElasticIP.Equal(payload.IP) {
 		Logger.Warning("peer sent message for wrong EIP")
 		return
 	}
 
-	if peer := engine.FindPeer(addr); peer != nil {
+	if peer, ok := engine.Peers[addr.IP.String()]; ok {
 		peer.Priority = payload.Priority
 		peer.NicID = payload.NicID
 		peer.LastSeen = CurrentTimeMillis()
@@ -298,9 +372,9 @@ func (engine *Engine) PeerIsNewlyDead(now int64, peer *Peer) bool {
 	dead := peerDiff > int64(engine.Interval*engine.DeadRatio)*1000
 	if dead != peer.Dead {
 		if dead {
-			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, considering dead.", peer.IP, peerDiff))
+			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, considering dead.", peer.UDPAddr.IP, peerDiff))
 		} else {
-			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, is now back alive.", peer.IP, peerDiff))
+			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, is now back alive.", peer.UDPAddr.IP, peerDiff))
 		}
 		peer.Dead = dead
 		return dead
