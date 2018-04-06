@@ -5,7 +5,7 @@
   branch = "list-vms"
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "6481b8b399087ea2632a7b2e0264a255e54bb332"
+  revision = "64f7ceb64aa187be2b109da102b1163509852b1f"
 
 [[projects]]
   branch = "master"
