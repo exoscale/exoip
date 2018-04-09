@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/exoscale/egoscale"
@@ -116,7 +118,7 @@ func checkMode() bool {
 
 	if i != 1 {
 		fmt.Fprintln(os.Stderr, "need exactly one of -A, -D, or -W")
-		exoip.Logger.Info(fmt.Sprintf("invalid mode: need exactly one of -A, -D, or -W"))
+		exoip.Logger.Info("invalid mode: need exactly one of -A, -D, or -W")
 		return false
 	}
 
@@ -259,6 +261,19 @@ func main() {
 	} else {
 		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, peers, "")
 	}
+
+	sigs := make(chan os.Signal)
+	signal.Notify(sigs, syscall.SIGTERM)
+	signal.Notify(sigs, syscall.SIGINT)
+	go func() {
+		sig := <-sigs
+		exoip.Logger.Info(fmt.Sprintf("got sig: %+v, releasing the Nic and stopping.", sig))
+		if err := engine.ReleaseMyNic(); err != nil {
+			exoip.Logger.Crit(err.Error())
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}()
 
 	go func() {
 		// pings every interval our peers
