@@ -328,7 +328,16 @@ func (engine *Engine) UpdatePeers() error {
 		ZoneID: engine.ZoneID,
 	}
 
-	Logger.Info(fmt.Sprintf("Updating peers %s (%s)", engine.SecurityGroupName, engine.ZoneID))
+	Logger.Info(fmt.Sprintf("Updating peers %s (zone: %s)", engine.SecurityGroupName, engine.ZoneID))
+	// grab the right to alter the Peers
+	engine.peersMu.Lock()
+	defer engine.peersMu.Unlock()
+
+	knownPeers := make(map[string]interface{})
+	for key := range engine.peers {
+		knownPeers[key] = nil
+	}
+
 	vms, err := client.List(vm)
 	if err != nil {
 		return err
@@ -347,10 +356,6 @@ func (engine *Engine) UpdatePeers() error {
 			continue
 		}
 
-		// grab the right to alter the Peers
-		engine.peersMu.Lock()
-		defer engine.peersMu.Unlock()
-
 		for _, sg := range vm.SecurityGroup {
 			if sg.Name != engine.SecurityGroupName {
 				continue
@@ -365,9 +370,18 @@ func (engine *Engine) UpdatePeers() error {
 					return err
 				}
 
+				Logger.Info(fmt.Sprintf("Found new peer %s (vm: %s)", key, vm.ID))
 				engine.peers[key] = NewPeer(addr, vm.ID, vm.DefaultNic().ID)
+			} else {
+				delete(knownPeers, key)
 			}
 		}
+	}
+
+	// Remove extra peers from list of known peers
+	for key := range knownPeers {
+		Logger.Info(fmt.Sprintf("Removing peer %s", key))
+		delete(engine.peers, key)
 	}
 
 	return nil

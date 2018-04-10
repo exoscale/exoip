@@ -281,7 +281,6 @@ func main() {
 
 		for {
 			if i == 0 {
-				exoip.Logger.Info("Updating list of peers")
 				engine.UpdatePeers()
 			}
 
