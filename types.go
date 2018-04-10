@@ -5,6 +5,7 @@ import (
 	"log/syslog"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/exoscale/egoscale"
 )
@@ -15,7 +16,7 @@ type Peer struct {
 	UDPAddr          *net.UDPAddr
 	Dead             bool
 	Priority         byte
-	LastSeen         int64
+	LastSeen         time.Time
 	NicID            string
 	conn             *net.UDPConn
 }
@@ -33,30 +34,18 @@ type wrappedLogger struct {
 	stdWriter    *log.Logger
 }
 
-//go:generate stringer -type=State
-
-// State represents the state : backup, master
-type State int
-
-const (
-	// StateBackup represents the backup state
-	StateBackup State = iota
-	// StateMaster represents the master state
-	StateMaster
-)
-
 // Engine represents the ExoIP engine structure
 type Engine struct {
 	client            *egoscale.Client
 	DeadRatio         int
-	Interval          int
+	Interval          time.Duration
 	Priority          byte
 	SendBuf           []byte
 	peers             map[string]*Peer
 	peersMu           sync.RWMutex
 	State             State
-	LastSend          int64
-	InitHoldOff       int64
+	LastSend          time.Time
+	InitHoldOff       time.Time
 	ElasticIP         net.IP
 	VirtualMachineID  string
 	SecurityGroupName string

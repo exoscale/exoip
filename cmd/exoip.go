@@ -287,8 +287,8 @@ func main() {
 			engine.PingPeers()
 			engine.CheckState()
 
-			i = i + 1%100
-			time.Sleep(time.Duration(engine.Interval) * time.Second)
+			i = (i + 1) % 100
+			time.Sleep(engine.Interval)
 		}
 	}()
 

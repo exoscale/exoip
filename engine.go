@@ -16,11 +16,8 @@ const DefaultPort = 12345
 // ProtoVersion version of the protocol
 const ProtoVersion = "0201"
 
-// SkewMillis how much time to way
-const SkewMillis = 100
-
-// Skew how much time to way
-const Skew time.Duration = 100 * time.Millisecond
+// Skew how much time to wait
+const Skew = 100 * time.Millisecond
 
 // Verbose makes the client talkative
 var Verbose = false
@@ -72,7 +69,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 	engine := &Engine{
 		client:            client,
 		DeadRatio:         deadRatio,
-		Interval:          interval,
+		Interval:          time.Duration(interval) * time.Second,
 		Priority:          sendbuf[2],
 		SendBuf:           sendbuf,
 		peers:             make(map[string]*Peer),
@@ -82,7 +79,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 		ElasticIP:         netip,
 		VirtualMachineID:  instanceID,
 		ZoneID:            zoneID,
-		InitHoldOff:       CurrentTimeMillis() + (1000 * int64(deadRatio) * int64(interval)) + SkewMillis,
+		InitHoldOff:       time.Now().Add(time.Duration(int64(interval)*int64(deadRatio))*time.Second + Skew),
 	}
 
 	for _, peerAddress := range peers {
@@ -157,7 +154,7 @@ func (engine *Engine) PingPeers() error {
 		// do not account for errors
 		peer.Send(engine.SendBuf)
 	}
-	engine.LastSend = CurrentTimeMillis()
+	engine.LastSend = time.Now()
 	return nil
 }
 
@@ -399,7 +396,7 @@ func (engine *Engine) UpdatePeer(addr net.UDPAddr, payload *Payload) {
 	if peer, ok := engine.peers[addr.IP.String()]; ok {
 		peer.Priority = payload.Priority
 		peer.NicID = payload.NicID
-		peer.LastSeen = CurrentTimeMillis()
+		peer.LastSeen = time.Now()
 		return
 	}
 
@@ -407,9 +404,9 @@ func (engine *Engine) UpdatePeer(addr net.UDPAddr, payload *Payload) {
 }
 
 // PeerIsNewlyDead contains the logic to say if the peer is considered dead
-func (engine *Engine) PeerIsNewlyDead(now int64, peer *Peer) bool {
-	peerDiff := now - peer.LastSeen
-	dead := peerDiff > int64(engine.Interval*engine.DeadRatio)*1000
+func (engine *Engine) PeerIsNewlyDead(now time.Time, peer *Peer) bool {
+	peerDiff := now.Sub(peer.LastSeen)
+	dead := peerDiff > (engine.Interval * time.Duration(engine.DeadRatio))
 	if dead != peer.Dead {
 		if dead {
 			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, considering dead.", peer.UDPAddr.IP, peerDiff))
@@ -461,9 +458,9 @@ func (engine *Engine) CheckState() {
 
 	time.Sleep(Skew)
 
-	now := CurrentTimeMillis()
+	now := time.Now()
 
-	if now <= engine.InitHoldOff {
+	if now.Before(engine.InitHoldOff) {
 		return
 	}
 
