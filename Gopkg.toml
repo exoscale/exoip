@@ -1,7 +1,6 @@
 [[constraint]]
   name = "github.com/exoscale/egoscale"
-  #version = "0.9.17"
-  branch = "list-vms"
+  version = "0.9.17"
 
 [[constraint]]
   name = "github.com/vishvananda/netlink"

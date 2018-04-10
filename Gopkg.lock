@@ -2,10 +2,10 @@
 
 
 [[projects]]
-  branch = "list-vms"
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "093bb14e979104a792246a45f64667cc24f6ddf6"
+  revision = "4e94c083554a7135ec2d23adb10d614b33a5c6c3"
+  version = "v0.9.18"
 
 [[projects]]
   branch = "master"
@@ -37,6 +37,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ae75b2ddf318ec209e7b2f1ba7cc194b015576c269896567b97755fa55827186"
+  inputs-digest = "0b29d2bc0abe3026518efd4d7e72e2b9e71fdd9b55cb59019d51c50190278b9a"
   solver-name = "gps-cdcl"
   solver-version = 1
