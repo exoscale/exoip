@@ -4,6 +4,7 @@ import (
 	"log"
 	"log/syslog"
 	"net"
+	"sync"
 
 	"github.com/exoscale/egoscale"
 )
@@ -51,7 +52,8 @@ type Engine struct {
 	Interval          int
 	Priority          byte
 	SendBuf           []byte
-	Peers             map[string]*Peer
+	peers             map[string]*Peer
+	peersMu           sync.RWMutex
 	State             State
 	LastSend          int64
 	InitHoldOff       int64

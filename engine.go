@@ -75,7 +75,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 		Interval:          interval,
 		Priority:          sendbuf[2],
 		SendBuf:           sendbuf,
-		Peers:             make(map[string]*Peer),
+		peers:             make(map[string]*Peer),
 		SecurityGroupName: securityGroupName,
 		State:             StateBackup,
 		NicID:             nicID,
@@ -89,7 +89,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 		peer, err := engine.FetchPeer(peerAddress)
 		assertSuccess(err)
 
-		engine.Peers[peerAddress] = peer
+		engine.peers[peerAddress] = peer
 	}
 
 	return engine
@@ -146,6 +146,19 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 			engine.UpdatePeer(*addr, payload)
 		}
 	}
+}
+
+// PingPeers sends the SendBuf to each peer
+func (engine *Engine) PingPeers() error {
+	engine.peersMu.RLock()
+	defer engine.peersMu.RUnlock()
+
+	for _, peer := range engine.peers {
+		// do not account for errors
+		peer.Send(engine.SendBuf)
+	}
+	engine.LastSend = CurrentTimeMillis()
+	return nil
 }
 
 // FetchPeer fetches a Peer from its IP address
@@ -334,13 +347,17 @@ func (engine *Engine) UpdatePeers() error {
 			continue
 		}
 
+		// grab the right to alter the Peers
+		engine.peersMu.Lock()
+		defer engine.peersMu.Unlock()
+
 		for _, sg := range vm.SecurityGroup {
 			if sg.Name != engine.SecurityGroupName {
 				continue
 			}
 
 			key := ip.String()
-			if _, ok := engine.Peers[key]; !ok {
+			if _, ok := engine.peers[key]; !ok {
 				// add peer
 				addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", key, DefaultPort))
 				if err != nil {
@@ -348,7 +365,7 @@ func (engine *Engine) UpdatePeers() error {
 					return err
 				}
 
-				engine.Peers[key] = NewPeer(addr, vm.ID, vm.DefaultNic().ID)
+				engine.peers[key] = NewPeer(addr, vm.ID, vm.DefaultNic().ID)
 			}
 		}
 	}
@@ -358,13 +375,14 @@ func (engine *Engine) UpdatePeers() error {
 
 // UpdatePeer update the state of the given peer
 func (engine *Engine) UpdatePeer(addr net.UDPAddr, payload *Payload) {
-
 	if !engine.ElasticIP.Equal(payload.IP) {
 		Logger.Warning("peer sent message for wrong EIP")
 		return
 	}
 
-	if peer, ok := engine.Peers[addr.IP.String()]; ok {
+	engine.peersMu.Lock()
+	defer engine.peersMu.Unlock()
+	if peer, ok := engine.peers[addr.IP.String()]; ok {
 		peer.Priority = payload.Priority
 		peer.NicID = payload.NicID
 		peer.LastSeen = CurrentTimeMillis()
@@ -398,4 +416,66 @@ func (engine *Engine) BackupOf(peer *Peer) bool {
 // HandleDeadPeer releases the NIC
 func (engine *Engine) HandleDeadPeer(peer *Peer) {
 	engine.ReleaseNic(peer.NicID)
+}
+
+// PerformStateTransition transition to the given state
+func (engine *Engine) PerformStateTransition(state State) {
+
+	if engine.State == state {
+		return
+	}
+
+	Logger.Info(fmt.Sprintf("swiching state to %s", state))
+
+	var err error
+	if state == StateBackup {
+		err = engine.ReleaseNic(engine.NicID)
+	} else {
+		err = engine.ObtainNic(engine.NicID)
+	}
+
+	if err != nil {
+		Logger.Crit(fmt.Sprintf("could not switch state. %s", err))
+		return
+	}
+
+	engine.State = state
+}
+
+// CheckState updates the states of our peers
+func (engine *Engine) CheckState() {
+
+	time.Sleep(Skew)
+
+	now := CurrentTimeMillis()
+
+	if now <= engine.InitHoldOff {
+		return
+	}
+
+	deadPeers := make([]*Peer, 0)
+	bestAdvertisement := true
+
+	engine.peersMu.RLock()
+	defer engine.peersMu.RUnlock()
+
+	for _, peer := range engine.peers {
+		if engine.PeerIsNewlyDead(now, peer) {
+			deadPeers = append(deadPeers, peer)
+		} else {
+			if engine.BackupOf(peer) {
+				bestAdvertisement = false
+			}
+		}
+	}
+
+	if bestAdvertisement {
+		engine.PerformStateTransition(StateMaster)
+	} else {
+		engine.PerformStateTransition(StateBackup)
+	}
+
+	for _, peer := range deadPeers {
+		engine.HandleDeadPeer(peer)
+	}
 }

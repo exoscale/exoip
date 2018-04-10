@@ -281,15 +281,11 @@ func main() {
 
 		for {
 			if i == 0 {
+				exoip.Logger.Info("Updating list of peers")
 				engine.UpdatePeers()
 			}
 
-			for _, peer := range engine.Peers {
-				// do not account for errors
-				peer.Send(engine.SendBuf)
-			}
-			engine.LastSend = exoip.CurrentTimeMillis()
-
+			engine.PingPeers()
 			engine.CheckState()
 
 			i = i + 1%100
