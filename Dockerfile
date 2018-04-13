@@ -17,7 +17,7 @@ RUN apk add --no-cache \
  && go get github.com/golang/dep/cmd/dep \
  && cd /go/src/github.com/exoscale/exoip \
  && dep ensure \
- && CGO_ENABLED=0 GOOS=linux go build -ldflags "-s" -o /go/bin/exoip cmd/exoip.go
+ && CGO_ENABLED=0 GOOS=linux go install -ldflags "-s" github.com/exoscale/exoip/cmd/exoip
 
 
 FROM linuxkit/ca-certificates:v0.2

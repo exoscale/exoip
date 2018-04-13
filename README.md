@@ -77,15 +77,9 @@ environment variable:
 
 ## Building
 
-If you wish to inspect **exoip** and build it by yourself, you may do so
-by cloning [this repository](https://github.com/exoscale/exoip) and
-peforming the following steps:
+If you wish to inspect **exoip** and build it by yourself, you can install it by using `go get`.
 
-    git clone https://github.com/exoscale/exoip $GOPATH/src/github.com/exoscale/exoip
-    cd $(GOPATH)/src/github.com/exoscale/exoip
-    go get -u github.com/golang/dep/cmd/dep
-    dep ensure
-    make
+    go get -u github.com/exoscale/exoip/cmd/exoip
 
 ### Updating
 
@@ -128,8 +122,8 @@ write_files:
       down killall exoip
 
 runcmd:
-- wget https://github.com/exoscale/exoip/releases/download/0.3.2/exoip
-- wget https://github.com/exoscale/exoip/releases/download/0.3.2/exoip.asc
+- wget https://github.com/exoscale/exoip/releases/download/0.3.5/exoip
+- wget https://github.com/exoscale/exoip/releases/download/0.3.5/exoip.asc
 - gpg --recv-keys E458F9F85608DF5A22ECCD158B58C61D4FFE0C86
 - gpg --verify --trust-model always exoip.asc
 - sudo chmod +x exoip

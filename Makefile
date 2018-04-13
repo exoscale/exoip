@@ -6,7 +6,7 @@ GIMME_ARCH?=amd64
 
 
 MAIN=exoip
-CLI=cmd/$(MAIN).go
+CLI=cmd/$(MAIN)/main.go
 SRCS=$(wildcard *.go)
 
 DEST=build
