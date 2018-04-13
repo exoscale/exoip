@@ -36,6 +36,11 @@ deps: $(GOPATH)/src/$(PKG)
 	(cd $(GOPATH)/src/$(PKG) && \
 		$(DEP) ensure)
 
+.phony: deps-status
+deps-status: $(GOPATH)/src/$(PKG)
+	(cd $(GOPATH)/src/$(PKG) && \
+		$(DEP) status)
+
 .phony: deps-update
 deps-update: deps
 	(cd $(GOPATH)/src/$(PKG) && \
