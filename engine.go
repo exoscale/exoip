@@ -284,7 +284,7 @@ func (engine *Engine) ReleaseNic(nicID string) error {
 
 	nicAddressID := ""
 	for _, i := range vms {
-		vm := i.(egoscale.VirtualMachine)
+		vm := i.(*egoscale.VirtualMachine)
 		nic := vm.DefaultNic()
 		if nic != nil && nic.ID == nicID {
 			for _, secIP := range nic.SecondaryIP {
@@ -341,7 +341,7 @@ func (engine *Engine) UpdatePeers() error {
 	}
 
 	for _, v := range vms {
-		vm := v.(egoscale.VirtualMachine)
+		vm := v.(*egoscale.VirtualMachine)
 
 		// skip self
 		if vm.ID == engine.VirtualMachineID {
