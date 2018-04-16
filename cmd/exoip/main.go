@@ -158,6 +158,7 @@ func checkHostPriority() bool {
 		fmt.Fprintln(os.Stderr, "invalid host priority (must be 0-255)")
 		return false
 	}
+
 	return true
 }
 
@@ -265,14 +266,36 @@ func main() {
 	sigs := make(chan os.Signal)
 	signal.Notify(sigs, syscall.SIGTERM)
 	signal.Notify(sigs, syscall.SIGINT)
+	signal.Notify(sigs, syscall.SIGUSR1)
+	signal.Notify(sigs, syscall.SIGUSR2)
 	go func() {
-		sig := <-sigs
-		exoip.Logger.Info(fmt.Sprintf("got sig: %+v, releasing the Nic and stopping.", sig))
-		if err := engine.ReleaseMyNic(); err != nil {
-			exoip.Logger.Crit(err.Error())
-			os.Exit(1)
+		for {
+			sig := <-sigs
+			exoip.Logger.Info(fmt.Sprintf("got sig: %+v", sig))
+			switch sig {
+			case syscall.SIGUSR1:
+				prio, err := engine.LowerPriority()
+				if err != nil {
+					exoip.Logger.Warning(err.Error())
+				} else {
+					exoip.Logger.Info(fmt.Sprintf("new priority: %d", prio))
+				}
+			case syscall.SIGUSR2:
+				prio, err := engine.RaisePriority()
+				if err != nil {
+					exoip.Logger.Warning(err.Error())
+				} else {
+					exoip.Logger.Info(fmt.Sprintf("new priority: %d", prio))
+				}
+			default:
+				exoip.Logger.Info("releasing the Nic and stopping.")
+				if err := engine.ReleaseMyNic(); err != nil {
+					exoip.Logger.Crit(err.Error())
+					os.Exit(1)
+				}
+				os.Exit(0)
+			}
 		}
-		os.Exit(0)
 	}()
 
 	engine.UpdatePeers()

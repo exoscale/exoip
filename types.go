@@ -39,7 +39,7 @@ type Engine struct {
 	client            *egoscale.Client
 	DeadRatio         int
 	Interval          time.Duration
-	Priority          byte
+	priority          byte
 	SendBuf           []byte
 	peers             map[string]*Peer
 	peersMu           sync.RWMutex

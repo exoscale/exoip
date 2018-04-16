@@ -70,7 +70,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 		client:            client,
 		DeadRatio:         deadRatio,
 		Interval:          time.Duration(interval) * time.Second,
-		Priority:          sendbuf[2],
+		priority:          sendbuf[2],
 		SendBuf:           sendbuf,
 		peers:             make(map[string]*Peer),
 		SecurityGroupName: securityGroupName,
@@ -462,7 +462,7 @@ func (engine *Engine) PeerIsNewlyDead(now time.Time, peer *Peer) bool {
 
 // BackupOf tells if we are a backup of the given peer
 func (engine *Engine) BackupOf(peer *Peer) bool {
-	return (!peer.Dead && peer.Priority < engine.Priority)
+	return (!peer.Dead && peer.Priority < engine.priority)
 }
 
 // HandleDeadPeer releases the NIC
@@ -530,4 +530,22 @@ func (engine *Engine) CheckState() {
 	for _, peer := range deadPeers {
 		engine.HandleDeadPeer(peer)
 	}
+}
+
+// LowerPriority lowers the priority value (making it more important)
+func (engine *Engine) LowerPriority() (byte, error) {
+	if engine.priority > 1 {
+		engine.priority--
+		return engine.priority, nil
+	}
+	return engine.priority, fmt.Errorf("Priority cannot be lowered any more")
+}
+
+// RaisePriority raises the priority value (making it less important)
+func (engine *Engine) RaisePriority() (byte, error) {
+	if engine.priority < 255 {
+		engine.priority++
+		return engine.priority, nil
+	}
+	return engine.priority, fmt.Errorf("Priority cannot be raised any more")
 }
