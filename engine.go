@@ -198,7 +198,7 @@ func (engine *Engine) FetchNicAndVM() {
 
 	nic := vm.DefaultNic()
 	if nic == nil {
-		assertSuccess(fmt.Errorf("cannot find virtua machine default nic"))
+		assertSuccess(fmt.Errorf("cannot find self default nic"))
 	}
 
 	engine.NicID = nic.ID
@@ -288,7 +288,7 @@ func (engine *Engine) ReleaseNic(nicID string) error {
 		nic := vm.DefaultNic()
 		if nic != nil && nic.ID == nicID {
 			for _, secIP := range nic.SecondaryIP {
-				if secIP.IPAddress.String() == engine.ElasticIP.String() {
+				if secIP.IPAddress.Equal(engine.ElasticIP) {
 					nicAddressID = secIP.ID
 					break
 				}
@@ -297,7 +297,7 @@ func (engine *Engine) ReleaseNic(nicID string) error {
 	}
 
 	if len(nicAddressID) == 0 {
-		Logger.Warning("could not remove ip from nic: unknown association")
+		Logger.Warning("no vm holds the ipaddress")
 		return fmt.Errorf("")
 	}
 
@@ -309,6 +309,47 @@ func (engine *Engine) ReleaseNic(nicID string) error {
 	}
 
 	Logger.Info(fmt.Sprintf("released ip %s from nic %s", engine.ElasticIP.String(), nicID))
+	return nil
+}
+
+// UpdateNic checks if the EIP must be reattached to self
+func (engine *Engine) UpdateNic() error {
+	client := engine.client
+
+	vm := &egoscale.VirtualMachine{
+		ID: engine.VirtualMachineID,
+	}
+	err := client.Get(vm)
+	assertSuccess(err)
+
+	nic := vm.DefaultNic()
+	if nic == nil {
+		return fmt.Errorf("no default nic found for self")
+	}
+
+	if nic.ID != engine.NicID {
+		return fmt.Errorf("default nic ID doesn't match")
+	}
+
+	found := false
+	for _, secIP := range nic.SecondaryIP {
+		if secIP.IPAddress.Equal(engine.ElasticIP) {
+			// we still hold the EIP
+			found = true
+			break
+		}
+	}
+
+	// disassociate the IP from self if still present and slave
+	if engine.State == StateBackup && found {
+		return engine.ReleaseNic(engine.NicID)
+	}
+
+	// associate the IP to self if missing and Master
+	if engine.State == StateMaster && !found {
+		return engine.ObtainNic(engine.NicID)
+	}
+
 	return nil
 }
 
@@ -377,7 +418,7 @@ func (engine *Engine) UpdatePeers() error {
 
 	// Remove extra peers from list of known peers
 	for key := range knownPeers {
-		Logger.Info(fmt.Sprintf("Removing peer %s", key))
+		Logger.Info(fmt.Sprintf("removing peer %s", key))
 		delete(engine.peers, key)
 	}
 

@@ -275,19 +275,23 @@ func main() {
 		os.Exit(0)
 	}()
 
+	engine.UpdatePeers()
 	go func() {
 		// pings every interval our peers
 		i := 0
-
 		for {
+			i = (i + 1) % 100
 			if i == 0 {
+				if err := engine.UpdateNic(); err != nil {
+					exoip.Logger.Crit(err.Error())
+				}
+
 				engine.UpdatePeers()
 			}
 
 			engine.PingPeers()
 			engine.CheckState()
 
-			i = (i + 1) % 100
 			time.Sleep(engine.Interval)
 		}
 	}()
