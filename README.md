@@ -63,7 +63,7 @@ environment variable:
     -p string (or IF_EXOSCALE_PEERS)
         peers to communicate with (may be repeated and/or comma-separated)
     -G string (or IF_EXOSCALE_PEER_GROUP)
-        Security-Group to build peer list from
+        Security-Group to use to create/maintain the list of peers
     -r int (or IF_DEAD_RATIO)
         Dead ratio (default 3)
     -t int (or IF_ADVERTISEMENT_INTERVAL)
@@ -74,6 +74,14 @@ environment variable:
         Exoscale API Key
     -xs string (or IF_EXOSCALE_API_SECRET)
         Exoscale API Secret
+
+## Signals
+
+When running as a Docker container, signals are the best way to interact with the running container.
+
+**exoip** listens to `SIGUSR1` and `SIGUSR2` which will influence the current priority value by respectively doing a -1 or a +1 on it. `SIGUSR1` will promote it to a higher rank while `SIGUSR2` will lower its rank. A simple way to put on backup mode a node without restarting **exoip**.
+
+`SIGTERM` or `SIGINT` will attempt to disassociate the Elastic IP before quitting.
 
 ## Building
 
