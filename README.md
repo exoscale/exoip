@@ -7,11 +7,18 @@ exoip: heartbeat monitor for Exoscale Elastic IP Addresses
 Exoscale Elastic IP Addresses and performing state transitions much
 easier.
 
+```
+$ go install github.com/exoscale/exoip/cmd/exoip
+```
+
 **exoip** can run in one of three modes:
 
-- *Association Mode*: associates an EIP with an instance and exit.
-- *Dissociation Mode*: dissociates an EIP from an instance and exit.
-- *Watchdog Mode*: watches for peer liveness and handle necessary state transitions.
+- *Association Mode* (`-A`): associates an EIP with an instance and exit.
+
+- *Dissociation Mode* (`-D`): dissociates an EIP from an instance and exit.
+
+- *Watchdog Mode* (`-W`): watches for peer liveness and handle necessary state transitions.
+
 
 ## Watchdog protocol
 
