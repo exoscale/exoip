@@ -450,9 +450,9 @@ func (engine *Engine) PeerIsNewlyDead(now time.Time, peer *Peer) bool {
 	dead := peerDiff > (engine.Interval * time.Duration(engine.DeadRatio))
 	if dead != peer.Dead {
 		if dead {
-			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, considering dead.", peer.UDPAddr.IP, peerDiff))
+			Logger.Info(fmt.Sprintf("peer %s last seen %s (%dms ago), considering dead.", peer.UDPAddr.IP, peer.LastSeen.Format(time.RFC3339), peerDiff/time.Millisecond))
 		} else {
-			Logger.Info(fmt.Sprintf("peer %s last seen %dms ago, is now back alive.", peer.UDPAddr.IP, peerDiff))
+			Logger.Info(fmt.Sprintf("peer %s last seen %s (%dms ago), is now back alive.", peer.UDPAddr.IP, peer.LastSeen.Format(time.RFC3339), peerDiff/time.Millisecond))
 		}
 		peer.Dead = dead
 		return dead
