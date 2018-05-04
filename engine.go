@@ -553,8 +553,16 @@ func (engine *Engine) CheckState() {
 		engine.PerformStateTransition(StateBackup)
 	}
 
-	for _, peer := range deadPeers {
-		engine.HandleDeadPeer(peer)
+	// Disconnect the dead peers from their NIC
+	// and reobtain the Nic for ourself (split-brain)
+	if len(deadPeers) > 0 {
+		for _, peer := range deadPeers {
+			engine.HandleDeadPeer(peer)
+		}
+
+		if err := engine.UpdateNic(); err != nil {
+			Logger.Crit(err.Error())
+		}
 	}
 }
 
