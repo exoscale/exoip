@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "59e238e86558c4e2845b13f87c967ddc12549601"
-  version = "v0.9.20"
+  revision = "432a702ab7d709538572f9a2a42eaf0ca0691698"
+  version = "v0.9.23"
 
 [[projects]]
   branch = "master"
@@ -32,11 +32,11 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
+  revision = "6f686a352de66814cdd080d970febae7767857a3"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b58f3124a3ae7bb981acf729aa3c5cc6e0f7beb9564eb7fbeeab3a700b3dbbb4"
+  inputs-digest = "6ff77a7831c1b2500287930d121bedf5579ae9ca105aa18d38d3c0ba5d41c74a"
   solver-name = "gps-cdcl"
   solver-version = 1
