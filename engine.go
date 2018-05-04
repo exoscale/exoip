@@ -1,6 +1,7 @@
 package exoip
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -132,8 +133,14 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 			os.Exit(1)
 		}
 
+		if bytes.Contains(buf, []byte("info")) {
+			engine.Info()
+			continue
+		}
+
 		if n != payloadLength {
 			Logger.Warning("bad network payload")
+			continue
 		}
 
 		payload, err := NewPayload(buf)
@@ -142,6 +149,25 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 		} else {
 			engine.UpdatePeer(*addr, payload)
 		}
+	}
+}
+
+// Info logs the exoip current state (for debugging)
+func (engine *Engine) Info() {
+	Logger.Info(fmt.Sprintf("VirtualMachine IP: %s", engine.VirtualMachineID))
+	Logger.Info(fmt.Sprintf("Nic IP: %s", engine.NicID))
+	Logger.Info(fmt.Sprintf("Elastic IP: %s", engine.ElasticIP.String()))
+	Logger.Info(fmt.Sprintf("Dead ratio: %d", engine.DeadRatio))
+	Logger.Info(fmt.Sprintf("Priority: %d", engine.priority))
+	Logger.Info(fmt.Sprintf("State: %s", engine.State))
+	Logger.Info(fmt.Sprintf("Last Sent: %s", engine.LastSend.Format(time.RFC3339)))
+
+	engine.peersMu.RLock()
+	defer engine.peersMu.RUnlock()
+
+	for k, peer := range engine.peers {
+		Logger.Info(fmt.Sprintf("Peer: %s", k))
+		peer.Info()
 	}
 }
 

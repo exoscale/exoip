@@ -90,6 +90,12 @@ When running as a Docker container, signals are the best way to interact with th
 
 `SIGTERM` or `SIGINT` will attempt to disassociate the Elastic IP before quitting.
 
+## Information
+
+```
+$ echo -n "info" | nc -4u -w1 0.0.0.0 12345
+```
+
 ## Building
 
 If you wish to inspect **exoip** and build it by yourself, you can install it by using `go get`.
