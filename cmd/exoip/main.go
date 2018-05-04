@@ -31,6 +31,7 @@ var watchMode = flag.Bool("W", false, "Watchdog mode")
 var associateMode = flag.Bool("A", false, "Associate EIP and exit")
 var disassociateMode = flag.Bool("D", false, "Dissociate EIP and exit")
 var logStdout = flag.Bool("O", false, "Do not log to syslog, use standard output")
+var printVersion = flag.Bool("version", false, "Print version and quit")
 var peers stringslice
 var resetPeers = false
 
@@ -209,6 +210,11 @@ func main() {
 
 	parseEnvironment()
 	flag.Parse()
+
+	if *printVersion {
+		fmt.Printf("%v\n", exoip.Version)
+		os.Exit(0)
+	}
 
 	// Sanity Checks
 	setupLogger()
