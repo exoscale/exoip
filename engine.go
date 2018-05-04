@@ -298,26 +298,25 @@ func (engine *Engine) ReleaseMyNic() error {
 }
 
 // ReleaseNic removes the Elastic IP from the given NIC
-func (engine *Engine) ReleaseNic(nicID string) error {
+func (engine *Engine) ReleaseNic(vmID string, nicID string) error {
 	client := engine.client
 
-	vms, err := client.List(new(egoscale.VirtualMachine))
+	vm := &egoscale.VirtualMachine{
+		ID: vmID,
+	}
+	err := client.Get(vm)
 	if err != nil {
-		Logger.Crit(fmt.Sprintf("could not remove ip from nic: could not list virtualmachines: %s",
-			err))
+		Logger.Crit(fmt.Sprintf("could not remove ip from nic vm:%s. %s", vmID, err))
 		return err
 	}
 
 	nicAddressID := ""
-	for _, i := range vms {
-		vm := i.(*egoscale.VirtualMachine)
-		nic := vm.DefaultNic()
-		if nic != nil && nic.ID == nicID {
-			for _, secIP := range nic.SecondaryIP {
-				if secIP.IPAddress.Equal(engine.ElasticIP) {
-					nicAddressID = secIP.ID
-					break
-				}
+	nic := vm.DefaultNic()
+	if nic != nil && nic.ID == nicID {
+		for _, secIP := range nic.SecondaryIP {
+			if secIP.IPAddress.Equal(engine.ElasticIP) {
+				nicAddressID = secIP.ID
+				break
 			}
 		}
 	}
@@ -368,7 +367,7 @@ func (engine *Engine) UpdateNic() error {
 
 	// disassociate the IP from self if still present and slave
 	if engine.State == StateBackup && found {
-		return engine.ReleaseNic(engine.NicID)
+		return engine.ReleaseNic(engine.VirtualMachineID, engine.NicID)
 	}
 
 	// associate the IP to self if missing and Master
@@ -493,7 +492,7 @@ func (engine *Engine) BackupOf(peer *Peer) bool {
 
 // HandleDeadPeer releases the NIC
 func (engine *Engine) HandleDeadPeer(peer *Peer) {
-	engine.ReleaseNic(peer.NicID)
+	engine.ReleaseNic(peer.VirtualMachineID, peer.NicID)
 }
 
 // PerformStateTransition transition to the given state
@@ -507,7 +506,7 @@ func (engine *Engine) PerformStateTransition(state State) {
 
 	var err error
 	if state == StateBackup {
-		err = engine.ReleaseNic(engine.NicID)
+		err = engine.ReleaseNic(engine.VirtualMachineID, engine.NicID)
 	} else {
 		err = engine.ObtainNic(engine.NicID)
 	}
