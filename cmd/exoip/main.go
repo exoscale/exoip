@@ -305,25 +305,34 @@ func main() {
 	}()
 
 	engine.UpdatePeers()
+
 	go func() {
-		// pings every interval our peers
-		i := 0
+		interval := time.Duration(5 * time.Minute)
+		var elapsed time.Duration
 		for {
+			time.Sleep(interval - elapsed)
 			start := time.Now()
-			i = (i + 1) % 100
-			if i == 0 {
-				if err := engine.UpdateNic(); err != nil {
-					exoip.Logger.Crit(err.Error())
-				}
 
-				engine.UpdatePeers()
+			engine.UpdatePeers()
+			// Check that we still own the EIP
+			if err := engine.UpdateNic(); err != nil {
+				exoip.Logger.Crit(err.Error())
 			}
+			elapsed = time.Now().Sub(start)
+		}
+	}()
 
+	go func() {
+		interval := engine.Interval
+		// pings our peers at every interval
+		var elapsed time.Duration
+		for {
+			time.Sleep(interval - elapsed)
+
+			start := time.Now()
 			engine.PingPeers()
 			engine.CheckState()
-
-			elapsed := time.Now().Sub(start)
-			time.Sleep(engine.Interval - elapsed)
+			elapsed = time.Now().Sub(start)
 		}
 	}()
 

@@ -17,6 +17,9 @@ const DefaultPort = 12345
 // ProtoVersion version of the protocol
 const ProtoVersion = "0202"
 
+// PreviousProtoVersion version of the previously supported protocol compatilibilty between versions
+const PreviousProtoVersion = "0201"
+
 // Skew how much time to wait
 const Skew = 100 * time.Millisecond
 
@@ -127,7 +130,7 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 
 	buf := make([]byte, payloadLength)
 	for {
-		n, addr, err := ServerConn.ReadFromUDP(buf)
+		_, addr, err := ServerConn.ReadFromUDP(buf)
 		if err != nil {
 			Logger.Crit("network server died")
 			os.Exit(1)
@@ -135,11 +138,6 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 
 		if bytes.Contains(buf, []byte("info")) {
 			engine.Info()
-			continue
-		}
-
-		if n != payloadLength {
-			Logger.Warning("bad network payload")
 			continue
 		}
 
@@ -406,6 +404,12 @@ func (engine *Engine) UpdatePeers() error {
 	}
 
 	Logger.Info(fmt.Sprintf("Updating peers %s (zone: %s)", engine.SecurityGroupName, engine.ZoneID))
+
+	vms, err := client.List(vm)
+	if err != nil {
+		return err
+	}
+
 	// grab the right to alter the Peers
 	engine.peersMu.Lock()
 	defer engine.peersMu.Unlock()
@@ -413,11 +417,6 @@ func (engine *Engine) UpdatePeers() error {
 	knownPeers := make(map[string]interface{})
 	for key := range engine.peers {
 		knownPeers[key] = nil
-	}
-
-	vms, err := client.List(vm)
-	if err != nil {
-		return err
 	}
 
 	for _, v := range vms {

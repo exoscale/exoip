@@ -27,14 +27,9 @@ const payloadLength = 40
 func NewPayload(buf []byte) (*Payload, error) {
 	protobuf := make([]byte, 2)
 	protobuf = buf[0:2]
-	nicbuf := make([]byte, 16)
-	nicbuf = buf[8:24]
-	msgbuf := make([]byte, 16)
-	msgbuf = buf[24:40]
-
 	version := hex.EncodeToString(protobuf)
-	if ProtoVersion != version {
-		Logger.Warning(fmt.Sprintf("bad protocol version, got %v", version))
+	if ProtoVersion != version && PreviousProtoVersion != version {
+		Logger.Warning(fmt.Sprintf("bad protocol version, got %v, want %v", version, ProtoVersion))
 		return nil, errors.New("bad protocol version")
 	}
 
@@ -43,12 +38,12 @@ func NewPayload(buf []byte) (*Payload, error) {
 		return nil, errors.New("bad payload (priority should repeat)")
 	}
 
-	nicID, err := UUIDToStr(nicbuf)
+	nicID, err := UUIDToStr(buf[8:24])
 	if err != nil {
 		return nil, err
 	}
 
-	msgID, err := UUIDToStr(msgbuf)
+	msgID, err := UUIDToStr(buf[24:40])
 	if err != nil {
 		return nil, err
 	}
