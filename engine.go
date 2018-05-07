@@ -15,7 +15,10 @@ import (
 const DefaultPort = 12345
 
 // ProtoVersion version of the protocol
-const ProtoVersion = "0201"
+const ProtoVersion = "0202"
+
+// PreviousProtoVersion version of the previously supported protocol compatilibilty between versions
+const PreviousProtoVersion = "0201"
 
 // Skew how much time to wait
 const Skew = 100 * time.Millisecond
@@ -36,7 +39,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 	uuidbuf, err := StrToUUID(nicID)
 	assertSuccess(err)
 
-	sendbuf := make([]byte, 24)
+	sendbuf := make([]byte, payloadLength)
 	protobuf, err := hex.DecodeString(ProtoVersion)
 	assertSuccess(err)
 	netip := net.ParseIP(ip)
@@ -127,7 +130,7 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 
 	buf := make([]byte, payloadLength)
 	for {
-		n, addr, err := ServerConn.ReadFromUDP(buf)
+		_, addr, err := ServerConn.ReadFromUDP(buf)
 		if err != nil {
 			Logger.Crit("network server died")
 			os.Exit(1)
@@ -138,15 +141,11 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 			continue
 		}
 
-		if n != payloadLength {
-			Logger.Warning("bad network payload")
-			continue
-		}
-
 		payload, err := NewPayload(buf)
 		if err != nil {
 			Logger.Warning("unparseable payload")
 		} else {
+			Logger.Info(fmt.Sprintf("received: %s from %s", payload.ID, addr))
 			engine.UpdatePeer(*addr, payload)
 		}
 	}
@@ -176,9 +175,20 @@ func (engine *Engine) PingPeers() error {
 	engine.peersMu.RLock()
 	defer engine.peersMu.RUnlock()
 
+	// put a unique, and current identifier to our message
+	msgid, err := pseudoUUID()
+	if err != nil {
+		return err
+	}
+	copy(engine.SendBuf[24:40], msgid)
+
+	uuid, _ := UUIDToStr(msgid)
 	for _, peer := range engine.peers {
-		// do not account for errors
-		peer.Send(engine.SendBuf)
+		Logger.Info(fmt.Sprintf("sending %s to %s", uuid, peer.UDPAddr))
+		_, err := peer.Send(engine.SendBuf)
+		if err != nil {
+			Logger.Warning(fmt.Sprintf("Error sending ping to %v. %s", peer.UDPAddr, err))
+		}
 	}
 	engine.LastSend = time.Now()
 	return nil
@@ -365,13 +375,15 @@ func (engine *Engine) UpdateNic() error {
 		}
 	}
 
-	// disassociate the IP from self if still present and slave
+	// disassociate the IP from self if still present and backup
 	if engine.State == StateBackup && found {
+		Logger.Warning(fmt.Sprintf("state is %s but the eip was found, release", StateBackup))
 		return engine.ReleaseNic(engine.VirtualMachineID, engine.NicID)
 	}
 
 	// associate the IP to self if missing and Master
 	if engine.State == StateMaster && !found {
+		Logger.Warning(fmt.Sprintf("state is %s without the eip, obtain", StateMaster))
 		return engine.ObtainNic(engine.NicID)
 	}
 
@@ -392,6 +404,12 @@ func (engine *Engine) UpdatePeers() error {
 	}
 
 	Logger.Info(fmt.Sprintf("Updating peers %s (zone: %s)", engine.SecurityGroupName, engine.ZoneID))
+
+	vms, err := client.List(vm)
+	if err != nil {
+		return err
+	}
+
 	// grab the right to alter the Peers
 	engine.peersMu.Lock()
 	defer engine.peersMu.Unlock()
@@ -399,11 +417,6 @@ func (engine *Engine) UpdatePeers() error {
 	knownPeers := make(map[string]interface{})
 	for key := range engine.peers {
 		knownPeers[key] = nil
-	}
-
-	vms, err := client.List(vm)
-	if err != nil {
-		return err
 	}
 
 	for _, v := range vms {

@@ -1,6 +1,7 @@
 package exoip
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -8,26 +9,27 @@ import (
 	"strings"
 )
 
-const payloadLength = 24
+const payloadLength = 40
 
-// NewPayload builds a Payload from a raw buffer (length of 24)
+// NewPayload builds a Payload from a raw buffer (length of 40)
 //
 // The layout of the payload is as follows:
 //
-//      2bytes  2bytes  4 bytes         16 bytes
-//     +-------+-------+---------------+-------------------------------+
-//     | PROTO | PRIO  |    EIP        |   NicID (128bit UUID)         |
-//     +-------+-------+---------------+-------------------------------+
+//      2bytes  2bytes      4 bytes
+//     ┏━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━┓
+//     ┃ PROTO ┃ PRIO  ┃    EIP        ┃            16 bytes
+//     ┣━━━━━━━┻━━━━━━━┻━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+//     ┃ NicID (128bit UUID)                                          ┃
+//     ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+//     ┃ Message ID (128bit UUID)                                     ┃
+//     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 //
 func NewPayload(buf []byte) (*Payload, error) {
 	protobuf := make([]byte, 2)
 	protobuf = buf[0:2]
-	uuidbuf := make([]byte, 16)
-	uuidbuf = buf[8:24]
-
 	version := hex.EncodeToString(protobuf)
-	if ProtoVersion != version {
-		Logger.Warning(fmt.Sprintf("bad protocol version, got %v", version))
+	if ProtoVersion != version && PreviousProtoVersion != version {
+		Logger.Warning(fmt.Sprintf("bad protocol version, got %v, want %v", version, ProtoVersion))
 		return nil, errors.New("bad protocol version")
 	}
 
@@ -36,12 +38,18 @@ func NewPayload(buf []byte) (*Payload, error) {
 		return nil, errors.New("bad payload (priority should repeat)")
 	}
 
-	nicID, err := UUIDToStr(uuidbuf)
+	nicID, err := UUIDToStr(buf[8:24])
+	if err != nil {
+		return nil, err
+	}
+
+	msgID, err := UUIDToStr(buf[24:40])
 	if err != nil {
 		return nil, err
 	}
 
 	payload := &Payload{
+		ID:       msgID,
 		NicID:    nicID,
 		Priority: buf[2],
 		IP:       net.IPv4(buf[4], buf[5], buf[6], buf[7]),
@@ -82,4 +90,13 @@ func StrToUUID(uuid string) ([]byte, error) {
 	}
 
 	return ba, nil
+}
+
+func pseudoUUID() ([]byte, error) {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return b, err
+	}
+	return b, nil
 }

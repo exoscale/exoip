@@ -23,6 +23,7 @@ type Peer struct {
 
 // Payload represents a message of our protocol
 type Payload struct {
+	ID       string
 	Priority byte
 	IP       net.IP
 	NicID    string
