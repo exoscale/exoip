@@ -365,13 +365,15 @@ func (engine *Engine) UpdateNic() error {
 		}
 	}
 
-	// disassociate the IP from self if still present and slave
+	// disassociate the IP from self if still present and backup
 	if engine.State == StateBackup && found {
+		Logger.Warning(fmt.Sprintf("state is %s but the eip was found, release", StateBackup))
 		return engine.ReleaseNic(engine.VirtualMachineID, engine.NicID)
 	}
 
 	// associate the IP to self if missing and Master
 	if engine.State == StateMaster && !found {
+		Logger.Warning(fmt.Sprintf("state is %s without the eip, obtain", StateMaster))
 		return engine.ObtainNic(engine.NicID)
 	}
 
