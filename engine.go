@@ -15,7 +15,7 @@ import (
 const DefaultPort = 12345
 
 // ProtoVersion version of the protocol
-const ProtoVersion = "0201"
+const ProtoVersion = "0202"
 
 // Skew how much time to wait
 const Skew = 100 * time.Millisecond
@@ -36,7 +36,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 	uuidbuf, err := StrToUUID(nicID)
 	assertSuccess(err)
 
-	sendbuf := make([]byte, 24)
+	sendbuf := make([]byte, payloadLength)
 	protobuf, err := hex.DecodeString(ProtoVersion)
 	assertSuccess(err)
 	netip := net.ParseIP(ip)
@@ -147,6 +147,7 @@ func (engine *Engine) NetworkLoop(listenAddress string) error {
 		if err != nil {
 			Logger.Warning("unparseable payload")
 		} else {
+			Logger.Info(fmt.Sprintf("received: %s from %s", payload.ID, addr))
 			engine.UpdatePeer(*addr, payload)
 		}
 	}
@@ -176,9 +177,20 @@ func (engine *Engine) PingPeers() error {
 	engine.peersMu.RLock()
 	defer engine.peersMu.RUnlock()
 
+	// put a unique, and current identifier to our message
+	msgid, err := pseudoUUID()
+	if err != nil {
+		return err
+	}
+	copy(engine.SendBuf[24:40], msgid)
+
+	uuid, _ := UUIDToStr(msgid)
 	for _, peer := range engine.peers {
-		// do not account for errors
-		peer.Send(engine.SendBuf)
+		Logger.Info(fmt.Sprintf("sending %s to %s", uuid, peer.UDPAddr))
+		_, err := peer.Send(engine.SendBuf)
+		if err != nil {
+			Logger.Warning(fmt.Sprintf("Error sending ping to %v. %s", peer.UDPAddr, err))
+		}
 	}
 	engine.LastSend = time.Now()
 	return nil

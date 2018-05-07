@@ -309,6 +309,7 @@ func main() {
 		// pings every interval our peers
 		i := 0
 		for {
+			start := time.Now()
 			i = (i + 1) % 100
 			if i == 0 {
 				if err := engine.UpdateNic(); err != nil {
@@ -321,7 +322,8 @@ func main() {
 			engine.PingPeers()
 			engine.CheckState()
 
-			time.Sleep(engine.Interval)
+			elapsed := time.Now().Sub(start)
+			time.Sleep(engine.Interval - elapsed)
 		}
 	}()
 
