@@ -36,7 +36,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 	uuidbuf, err := StrToUUID(nicID)
 	assertSuccess(err)
 
-	sendbuf := make([]byte, 24)
+	sendbuf := make([]byte, payloadLength)
 	protobuf, err := hex.DecodeString(ProtoVersion)
 	assertSuccess(err)
 	netip := net.ParseIP(ip)
@@ -365,13 +365,15 @@ func (engine *Engine) UpdateNic() error {
 		}
 	}
 
-	// disassociate the IP from self if still present and slave
+	// disassociate the IP from self if still present and backup
 	if engine.State == StateBackup && found {
+		Logger.Warning(fmt.Sprintf("state is %s but the eip was found, release", engine.State))
 		return engine.ReleaseNic(engine.VirtualMachineID, engine.NicID)
 	}
 
 	// associate the IP to self if missing and Master
 	if engine.State == StateMaster && !found {
+		Logger.Warning(fmt.Sprintf("state is %s but the eip was missing, obtain", engine.State))
 		return engine.ObtainNic(engine.NicID)
 	}
 
@@ -392,6 +394,11 @@ func (engine *Engine) UpdatePeers() error {
 	}
 
 	Logger.Info(fmt.Sprintf("Updating peers %s (zone: %s)", engine.SecurityGroupName, engine.ZoneID))
+	vms, err := client.List(vm)
+	if err != nil {
+		return err
+	}
+
 	// grab the right to alter the Peers
 	engine.peersMu.Lock()
 	defer engine.peersMu.Unlock()
@@ -399,11 +406,6 @@ func (engine *Engine) UpdatePeers() error {
 	knownPeers := make(map[string]interface{})
 	for key := range engine.peers {
 		knownPeers[key] = nil
-	}
-
-	vms, err := client.List(vm)
-	if err != nil {
-		return err
 	}
 
 	for _, v := range vms {
@@ -490,11 +492,6 @@ func (engine *Engine) BackupOf(peer *Peer) bool {
 	return (!peer.Dead && peer.Priority < engine.priority)
 }
 
-// HandleDeadPeer releases the NIC
-func (engine *Engine) HandleDeadPeer(peer *Peer) {
-	engine.ReleaseNic(peer.VirtualMachineID, peer.NicID)
-}
-
 // PerformStateTransition transition to the given state
 func (engine *Engine) PerformStateTransition(state State) {
 
@@ -556,7 +553,7 @@ func (engine *Engine) CheckState() {
 	// and reobtain the Nic for ourself (split-brain)
 	if len(deadPeers) > 0 {
 		for _, peer := range deadPeers {
-			engine.HandleDeadPeer(peer)
+			engine.ReleaseNic(peer.VirtualMachineID, peer.NicID)
 		}
 
 		if err := engine.UpdateNic(); err != nil {

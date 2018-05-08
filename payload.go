@@ -14,16 +14,16 @@ const payloadLength = 24
 //
 // The layout of the payload is as follows:
 //
-//      2bytes  2bytes  4 bytes         16 bytes
-//     +-------+-------+---------------+-------------------------------+
-//     | PROTO | PRIO  |    EIP        |   NicID (128bit UUID)         |
-//     +-------+-------+---------------+-------------------------------+
+//      2bytes  2bytes      4 bytes
+//     ┏━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━┓
+//     ┃ PROTO ┃ PRIO  ┃    EIP        ┃            16 bytes
+//     ┣━━━━━━━┻━━━━━━━┻━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+//     ┃ NicID (128bit UUID)                                          ┃
+//     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 //
 func NewPayload(buf []byte) (*Payload, error) {
 	protobuf := make([]byte, 2)
 	protobuf = buf[0:2]
-	uuidbuf := make([]byte, 16)
-	uuidbuf = buf[8:24]
 
 	version := hex.EncodeToString(protobuf)
 	if ProtoVersion != version {
@@ -36,7 +36,7 @@ func NewPayload(buf []byte) (*Payload, error) {
 		return nil, errors.New("bad payload (priority should repeat)")
 	}
 
-	nicID, err := UUIDToStr(uuidbuf)
+	nicID, err := UUIDToStr(buf[8:24])
 	if err != nil {
 		return nil, err
 	}
