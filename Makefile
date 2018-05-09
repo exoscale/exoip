@@ -65,7 +65,7 @@ clean:
 	$(RM) -r $(DEST)
 	go clean
 
-.PHONY: signature
+.PHONY: clean signature
 signature: $(BINS)
 	$(foreach bin,$^,\
 		$(RM) $(bin).asc; \
