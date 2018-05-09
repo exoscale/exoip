@@ -1,4 +1,4 @@
-VERSION=0.3.8
+VERSION=0.3.9
 PKG=github.com/exoscale/exoip
 
 GIMME_OS?=linux

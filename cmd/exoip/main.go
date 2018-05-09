@@ -182,22 +182,22 @@ func printConfiguration() {
 	fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
 	fmt.Printf("\texoscale-api-endpoint: %s\n", *csEndpoint)
 
-	exoip.Logger.Info(fmt.Sprintf("exoip will watch over: %s\n", *eip))
-	exoip.Logger.Info(fmt.Sprintf("\tbind-address: %s\n", *address))
-	exoip.Logger.Info(fmt.Sprintf("\thost-priority: %d\n", *prio))
-	exoip.Logger.Info(fmt.Sprintf("\tadvertisement-interval: %d\n", *timer))
-	exoip.Logger.Info(fmt.Sprintf("\tdead-ratio: %d\n", *deadRatio))
-	exoip.Logger.Info(fmt.Sprintf("\texoscale-api-key: %s\n", *exoToken))
-	exoip.Logger.Info(fmt.Sprintf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2]))
-	exoip.Logger.Info(fmt.Sprintf("\texoscale-api-endpoint: %s\n", *csEndpoint))
+	exoip.Logger.Info("exoip will watch over: %s\n", *eip)
+	exoip.Logger.Info("\tbind-address: %s\n", *address)
+	exoip.Logger.Info("\thost-priority: %d\n", *prio)
+	exoip.Logger.Info("\tadvertisement-interval: %d\n", *timer)
+	exoip.Logger.Info("\tdead-ratio: %d\n", *deadRatio)
+	exoip.Logger.Info("\texoscale-api-key: %s\n", *exoToken)
+	exoip.Logger.Info("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
+	exoip.Logger.Info("\texoscale-api-endpoint: %s\n", *csEndpoint)
 
 	if len(*exoSecurityGroup) > 0 {
 		fmt.Printf("\texoscale-peer-group: %s\n", *exoSecurityGroup)
-		exoip.Logger.Info(fmt.Sprintf("\texoscale-peer-group: %s\n", *exoSecurityGroup))
+		exoip.Logger.Info("\texoscale-peer-group: %s\n", *exoSecurityGroup)
 	} else {
 		for _, p := range peers {
 			fmt.Printf("\tpeer: %s\n", p)
-			exoip.Logger.Info(fmt.Sprintf("\tpeer: %s\n", p))
+			exoip.Logger.Info("\tpeer: %s\n", p)
 		}
 	}
 }
@@ -277,24 +277,26 @@ func main() {
 	go func() {
 		for {
 			sig := <-sigs
-			exoip.Logger.Info(fmt.Sprintf("got sig: %+v", sig))
+			exoip.Logger.Info("got sig: %+v", sig)
+			fmt.Fprintf(os.Stderr, "got sig: %+v\n", sig)
 			switch sig {
 			case syscall.SIGUSR1:
 				prio, err := engine.LowerPriority()
 				if err != nil {
 					exoip.Logger.Warning(err.Error())
 				} else {
-					exoip.Logger.Info(fmt.Sprintf("new priority: %d", prio))
+					exoip.Logger.Info("new priority: %d", prio)
 				}
 			case syscall.SIGUSR2:
 				prio, err := engine.RaisePriority()
 				if err != nil {
 					exoip.Logger.Warning(err.Error())
 				} else {
-					exoip.Logger.Info(fmt.Sprintf("new priority: %d", prio))
+					exoip.Logger.Info("new priority: %d", prio)
 				}
 			default:
 				exoip.Logger.Info("releasing the Nic and stopping.")
+				fmt.Fprintln(os.Stderr, "releasing the Nic and stopping")
 				if err := engine.ReleaseMyNic(); err != nil {
 					exoip.Logger.Crit(err.Error())
 					os.Exit(1)
@@ -332,7 +334,7 @@ func main() {
 			engine.PingPeers()
 			elapsed = time.Now().Sub(start)
 			if elapsed > engine.Interval {
-				exoip.Logger.Warning(fmt.Sprintf("PingPeers took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond))
+				exoip.Logger.Warning("PingPeers took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond)
 			}
 		}
 	}()
@@ -347,7 +349,7 @@ func main() {
 			engine.CheckState()
 			elapsed = time.Now().Sub(start)
 			if elapsed > engine.Interval {
-				exoip.Logger.Warning(fmt.Sprintf("CheckState took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond))
+				exoip.Logger.Warning("CheckState took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond)
 			}
 		}
 	}()
