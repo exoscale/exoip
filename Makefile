@@ -9,12 +9,6 @@ MAIN=exoip
 CLI=cmd/$(MAIN)/main.go
 SRCS=$(wildcard *.go)
 
-DEST=build
-BIN=$(DEST)/$(MAIN)
-BINS=\
-		$(BIN)        \
-		$(BIN)-static
-
 GOPATH=$(CURDIR)/.gopath
 DEP=$(GOPATH)/bin/dep
 
@@ -23,7 +17,7 @@ export PATH := $(PATH):$(GOPATH)/bin
 
 RM?=rm -f
 
-all: $(BIN)
+all: $(MAIN)
 
 $(GOPATH)/src/$(PKG):
 	mkdir -p $(GOPATH)
@@ -46,30 +40,18 @@ deps-update: deps
 	(cd $(GOPATH)/src/$(PKG) && \
 		$(DEP) ensure -update)
 
+$(MAIN): $(CLI) $(SRCS)
+	(cd $(GOPATH)/src/$(PKG) && \
+		go build -o $@ $<)
+
 .phony: generate
 generate: deps
 	go get -u golang.org/x/tools/cmd/stringer
 	(cd $(GOPATH)/src/$(PKG) && \
 		go generate)
 
-$(BIN): $(CLI) $(SRCS)
-	(cd $(GOPATH)/src/$(PKG) && \
-		go build -o $@ $<)
-
-$(BIN)-static: $(CLI) $(SRCS)
-	(cd $(GOPATH)/src/$(PKG) && \
-		CGO_ENABLED=0 GOOS=$(GIMME_OS) GOARCH=$(GIMME_ARCH) \
-		go build -ldflags "-s" -o $@ $<)
-
 clean:
-	$(RM) -r $(DEST)
 	go clean
-
-.PHONY: clean signature
-signature: $(BINS)
-	$(foreach bin,$^,\
-		$(RM) $(bin).asc; \
-		gpg -a --sign -u ops@exoscale.ch --detach $(bin);)
 
 .PHONY: docker
 docker:

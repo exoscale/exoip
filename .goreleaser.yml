@@ -1,0 +1,18 @@
+builds:
+  - main: cmd/exoip/main.go
+    binary: exoip
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+sign:
+  cmd: gpg
+  args: ["-a", "-u", "ops@exoscale.ch", "--detach-sign", "${artifact}"]
+  artifacts: all
+
+
+dist: build
+
+git:
+  short_hash: true
