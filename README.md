@@ -63,7 +63,7 @@ environment variable:
         Watchdog mode (exclusive with -A and -D)
     -P int (or IF_HOST_PRIORITY)
         Host priority (lowest wins) (default 10, maximum 255)
-    -l string (or IF_BIND_ADDRESS)
+    -l string (or IF_BIND_TO)
         Address to bind to (default ":12345")
     -i string (or IF_EXOSCALE_INSTANCE_ID)
         Instance ID of one self (useful when running from a container)
