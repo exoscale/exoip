@@ -27,7 +27,7 @@ var Verbose = false
 var Logger *wrappedLogger
 
 // NewEngineWatchdog creates an new watchdog engine
-func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval int,
+func NewEngineWatchdog(client *egoscale.Client, addr, ip, instanceID string, interval int,
 	prio int, deadRatio int, peers []string, securityGroupName string) *Engine {
 
 	zoneID, nicID, err := fetchMyInfo(client, instanceID)
@@ -69,6 +69,7 @@ func NewEngineWatchdog(client *egoscale.Client, ip, instanceID string, interval 
 
 	engine := &Engine{
 		client:            client,
+		ListenAddress:     addr,
 		DeadRatio:         deadRatio,
 		Interval:          time.Duration(interval) * time.Second,
 		priority:          sendbuf[2],
@@ -119,8 +120,8 @@ func NewEngine(client *egoscale.Client, ipAddress, instanceID string) *Engine {
 }
 
 // NetworkLoop starts the UDP server
-func (engine *Engine) NetworkLoop(listenAddress string) error {
-	ServerAddr, err := net.ResolveUDPAddr("udp", listenAddress)
+func (engine *Engine) NetworkLoop() error {
+	ServerAddr, err := net.ResolveUDPAddr("udp", engine.ListenAddress)
 	assertSuccess(err)
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
 	assertSuccess(err)
@@ -209,7 +210,7 @@ func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
 		return nil, fmt.Errorf("peer (%v) has no default nic", peerAddress)
 	}
 
-	return NewPeer(addr, vm.ID, nic.ID), nil
+	return NewPeer(engine.ListenAddress, addr, vm.ID, nic.ID), nil
 }
 
 // FetchNicAndVM fetches our NIC and the VirtualMachine
@@ -436,7 +437,7 @@ func (engine *Engine) UpdatePeers() error {
 				}
 
 				Logger.Info(fmt.Sprintf("Found new peer %s (vm: %s)", key, vm.ID))
-				engine.peers[key] = NewPeer(addr, vm.ID, vm.DefaultNic().ID)
+				engine.peers[key] = NewPeer(engine.ListenAddress, addr, vm.ID, vm.DefaultNic().ID)
 			} else {
 				delete(knownPeers, key)
 			}

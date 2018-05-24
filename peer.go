@@ -3,17 +3,28 @@ package exoip
 import (
 	"fmt"
 	"net"
+	"strings"
 	"time"
 )
 
 // NewPeer creates a new peer
-func NewPeer(address *net.UDPAddr, id, nicID string) *Peer {
-	conn, err := net.DialUDP("udp", nil, address)
+func NewPeer(listenAddress string, raddr *net.UDPAddr, id, nicID string) *Peer {
+	var laddr *net.UDPAddr
+
+	i := strings.IndexRune(listenAddress, ':')
+	if i > 0 {
+		local := listenAddress[0:i]
+		var err error
+		laddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:0", local))
+		assertSuccess(err)
+	}
+
+	conn, err := net.DialUDP("udp", laddr, raddr)
 	assertSuccess(err)
 
 	return &Peer{
 		VirtualMachineID: id,
-		UDPAddr:          address,
+		UDPAddr:          raddr,
 		NicID:            nicID,
 		conn:             conn,
 	}

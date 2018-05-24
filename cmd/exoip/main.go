@@ -264,9 +264,9 @@ func main() {
 			os.Exit(1)
 		}
 
-		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, nil, *exoSecurityGroup)
+		engine = exoip.NewEngineWatchdog(ego, *address, *eip, *instanceID, *timer, *prio, *deadRatio, nil, *exoSecurityGroup)
 	} else {
-		engine = exoip.NewEngineWatchdog(ego, *eip, *instanceID, *timer, *prio, *deadRatio, peers, "")
+		engine = exoip.NewEngineWatchdog(ego, *address, *eip, *instanceID, *timer, *prio, *deadRatio, peers, "")
 	}
 
 	sigs := make(chan os.Signal)
@@ -355,6 +355,6 @@ func main() {
 	}()
 
 	exoip.Logger.Info("starting watchdog")
-	engine.NetworkLoop(*address)
+	engine.NetworkLoop()
 	os.Exit(0)
 }
