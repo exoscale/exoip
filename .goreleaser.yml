@@ -12,6 +12,15 @@ sign:
   artifacts: all
 
 
+dockers:
+  - image: exoscale/exoip
+    dockerfile: Dockerfile.minimal
+    binary: exoip
+    skip_push: true
+    tag_templates:
+      - "{{ .Tag }}"
+      - latest
+
 dist: build
 
 git:
