@@ -8,11 +8,14 @@ node {
       stage('SCM') {
         checkout scm
       }
+      stage('dep') {
+        godep()
+      }
       updateGithubCommitStatus('PENDING', "${env.WORKSPACE}/src")
       stage('Build') {
         parallel (
           "go lint": {
-            lint()
+            golint()
           },
           "go test": {
             test()
@@ -38,14 +41,24 @@ node {
   }
 }
 
-def lint() {
+def godep() {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.10')
     image.pull()
     image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/exoscale/exoip") {
       sh 'test `gofmt -s -d -e . | tee -a /dev/fd/2 | wc -l` -eq 0'
-      sh 'golint -set_exit_status'
-      sh 'go tool vet .'
+      sh 'cd /go/src/github.com/exoscale/exoip && dep ensure -v -vendor-only'
+    }
+  }
+}
+def golint() {
+  docker.withRegistry('https://registry.internal.exoscale.ch') {
+    def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.10')
+    image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/exoscale/exoip") {
+      sh 'golint -set_exit_status github.com/exoscale/exoip'
+      sh 'golint -set_exit_status github.com/exoscale/exoip/cmd/exoip'
+      sh 'go vet github.com/exoscale/exoip'
+      sh 'go vet github.com/exoscale/exoip/cmd/exoip'
     }
   }
 }
@@ -54,7 +67,6 @@ def test() {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.10')
     image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/exoscale/exoip") {
-      sh 'cd /go/src/github.com/exoscale/exoip && dep ensure'
       sh 'cd /go/src/github.com/exoscale/exoip && go test'
     }
   }
@@ -64,8 +76,8 @@ def build() {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.10')
     image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/exoscale/exoip") {
-      sh 'cd /go/src/github.com/exoscale/exoip && dep ensure'
       sh 'go install github.com/exoscale/exoip/cmd/exoip'
+      sh 'test -e /go/bin/exoip'
     }
   }
 }
