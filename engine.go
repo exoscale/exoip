@@ -126,6 +126,7 @@ func (engine *Engine) NetworkLoop() error {
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
 	assertSuccess(err)
 
+	Logger.Info(fmt.Sprintf("listening on %s", ServerAddr))
 	buf := make([]byte, payloadLength)
 	for {
 		n, addr, err := ServerConn.ReadFromUDP(buf)
