@@ -1,0 +1,3 @@
+FROM linuxkit/ca-certificates:v0.4
+COPY exoip /
+ENTRYPOINT ["/exoip", "-O"]
