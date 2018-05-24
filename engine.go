@@ -455,7 +455,7 @@ func (engine *Engine) UpdatePeers() error {
 // UpdatePeer update the state of the given peer
 func (engine *Engine) UpdatePeer(addr net.UDPAddr, payload *Payload) {
 	if !engine.ElasticIP.Equal(payload.IP) {
-		Logger.Warning("peer sent message for wrong EIP")
+		Logger.Warning("peer sent message for wrong EIP, got %s", payload.IP.String())
 		return
 	}
 
@@ -468,7 +468,7 @@ func (engine *Engine) UpdatePeer(addr net.UDPAddr, payload *Payload) {
 		return
 	}
 
-	Logger.Warning("peer not found in configuration")
+	Logger.Warning("peer %s not found in configuration", addr.IP.String())
 }
 
 // PeerIsNewlyDead contains the logic to say if the peer is considered dead
