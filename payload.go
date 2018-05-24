@@ -74,7 +74,7 @@ func StrToUUID(uuid string) ([]byte, error) {
 
 	ba, err := hex.DecodeString(uuid)
 	if err != nil {
-		return nil, errors.New("Invalid UUID")
+		return nil, errors.New("invalid UUID")
 	}
 
 	if len(ba) != 16 { // 32 / 2

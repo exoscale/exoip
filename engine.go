@@ -206,7 +206,7 @@ func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
 
 	nic := vm.DefaultNic()
 	if nic == nil {
-		return nil, fmt.Errorf("Peer (%v) has no default nic", peerAddress)
+		return nil, fmt.Errorf("peer (%v) has no default nic", peerAddress)
 	}
 
 	return NewPeer(addr, vm.ID, nic.ID), nil
@@ -568,7 +568,7 @@ func (engine *Engine) LowerPriority() (byte, error) {
 		engine.priority--
 		return engine.priority, nil
 	}
-	return engine.priority, fmt.Errorf("Priority cannot be lowered any more")
+	return engine.priority, fmt.Errorf("priority cannot be lowered any more")
 }
 
 // RaisePriority raises the priority value (making it less important)
@@ -577,5 +577,5 @@ func (engine *Engine) RaisePriority() (byte, error) {
 		engine.priority++
 		return engine.priority, nil
 	}
-	return engine.priority, fmt.Errorf("Priority cannot be raised any more")
+	return engine.priority, fmt.Errorf("priority cannot be raised any more")
 }
