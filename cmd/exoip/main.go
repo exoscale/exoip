@@ -278,7 +278,8 @@ func main() {
 						continue
 					}
 					if ip != nil && ip.To4() != nil {
-						*address = ip.String()
+						*address = fmt.Sprintf("%s%s", ip.String(), *address)
+						exoip.Logger.Info("using IP address from %s", iface.Name)
 						break outterfor
 					}
 				}
