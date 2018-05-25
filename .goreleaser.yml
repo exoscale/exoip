@@ -9,7 +9,7 @@ builds:
 sign:
   cmd: gpg
   args: ["-u", "ops@exoscale.ch", "--detach-sign", "${artifact}"]
-  artifacts: all
+  artifacts: none
 
 dockers:
   - image: exoscale/exoip
