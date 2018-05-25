@@ -38,7 +38,7 @@ func FindMetadataServer() (string, error) {
 
 // FetchMetadata reads the metadata from the Virtual Router
 func FetchMetadata(mserver string, path string) (string, error) {
-	url := fmt.Sprintf("http://%s/%s", mserver, path)
+	url := fmt.Sprintf("http://%s%s", mserver, path)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
