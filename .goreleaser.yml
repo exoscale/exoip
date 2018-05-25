@@ -8,8 +8,8 @@ builds:
 
 sign:
   cmd: gpg
-  args: ["-a", "-u", "ops@exoscale.ch", "--detach-sign", "${artifact}"]
-  artifacts: none
+  args: ["-u", "ops@exoscale.ch", "--detach-sign", "${artifact}"]
+  artifacts: all
 
 dockers:
   - image: exoscale/exoip
@@ -24,3 +24,9 @@ dist: build
 
 git:
   short_hash: true
+
+release:
+  github:
+    owner: exoscale
+    name: exoip
+  draft: true
