@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"strings"
@@ -256,6 +257,33 @@ func main() {
 			os.Exit(1)
 		}
 		os.Exit(0)
+	}
+
+	if (*address)[0] == ':' {
+		interfaces, err := net.Interfaces()
+		if err == nil {
+		outterfor:
+			for _, iface := range interfaces {
+				if iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagUp == 0 {
+					continue
+				}
+
+				addrs, err := iface.Addrs()
+				if err != nil {
+					continue
+				}
+				for _, addr := range addrs {
+					ip, _, err := net.ParseCIDR(addr.String())
+					if err != nil {
+						continue
+					}
+					if ip != nil && ip.To4() != nil {
+						*address = ip.String()
+						break outterfor
+					}
+				}
+			}
+		}
 	}
 
 	if len(*exoSecurityGroup) > 0 {
