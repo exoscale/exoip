@@ -26,6 +26,7 @@ func NewPeer(listenAddress string, raddr *net.UDPAddr, id, nicID string) *Peer {
 		VirtualMachineID: id,
 		UDPAddr:          raddr,
 		NicID:            nicID,
+		Dead:             true,
 		conn:             conn,
 	}
 }

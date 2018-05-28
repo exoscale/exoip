@@ -481,7 +481,7 @@ func (engine *Engine) PeerIsNewlyDead(now time.Time, peer *Peer) bool {
 		if dead {
 			Logger.Info(fmt.Sprintf("peer %s last seen %s (%dms ago), considering dead.", peer.UDPAddr.IP, peer.LastSeen.Format(time.RFC3339), peerDiff/time.Millisecond))
 		} else {
-			Logger.Info(fmt.Sprintf("peer %s last seen %s (%dms ago), is now back alive.", peer.UDPAddr.IP, peer.LastSeen.Format(time.RFC3339), peerDiff/time.Millisecond))
+			Logger.Info(fmt.Sprintf("peer %s, is now back alive.", peer.UDPAddr.IP))
 		}
 		peer.Dead = dead
 		return dead

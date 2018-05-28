@@ -324,11 +324,13 @@ func main() {
 					exoip.Logger.Info("new priority: %d", prio)
 				}
 			default:
-				exoip.Logger.Info("releasing the Nic and stopping.")
-				fmt.Fprintln(os.Stderr, "releasing the Nic and stopping")
-				if err := engine.ReleaseMyNic(); err != nil {
-					exoip.Logger.Crit(err.Error())
-					os.Exit(1)
+				if engine.State == exoip.StateMaster {
+					exoip.Logger.Info("releasing the Nic and stopping.")
+					fmt.Fprintln(os.Stderr, "releasing the Nic and stopping")
+					if err := engine.ReleaseMyNic(); err != nil {
+						exoip.Logger.Crit(err.Error())
+						os.Exit(1)
+					}
 				}
 				os.Exit(0)
 			}
