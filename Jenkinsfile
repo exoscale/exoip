@@ -55,10 +55,8 @@ def golint() {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.10')
     image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/exoscale/exoip") {
-      sh 'golint -set_exit_status -min_confidence 0.6 github.com/exoscale/exoip'
-      sh 'golint -set_exit_status -min_confidence 0.6 github.com/exoscale/exoip/cmd/exoip'
-      sh 'go vet github.com/exoscale/exoip'
-      sh 'go vet github.com/exoscale/exoip/cmd/exoip'
+      sh 'golint -set_exit_status -min_confidence 0.6 $(go list github.com/exoscale/exoip/... | grep -v /vendor/)'
+      sh 'go vet $(go list github.com/exoscale/exoip/... | grep -v /vendor/)'
     }
   }
 }
@@ -83,8 +81,8 @@ def build() {
 }
 
 def docker() {
-  // XXX figure out a proper tag based on the branch or tag
-  tag = "latest"
+  def branch = getGitBranch()
+  def tag = getGitTag() ?: (branch == "master" ? "latest" : branch)
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.build("registry.internal.exoscale.ch/exoscale/exoip:" + tag, "--network host .")
     image.push()
