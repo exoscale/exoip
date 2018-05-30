@@ -568,6 +568,8 @@ func (engine *Engine) CheckState() {
 func (engine *Engine) LowerPriority() (byte, error) {
 	if engine.priority > 1 {
 		engine.priority--
+		engine.SendBuf[2] = byte(engine.priority)
+		engine.SendBuf[3] = byte(engine.priority)
 		return engine.priority, nil
 	}
 	return engine.priority, fmt.Errorf("priority cannot be lowered any more")
@@ -577,6 +579,8 @@ func (engine *Engine) LowerPriority() (byte, error) {
 func (engine *Engine) RaisePriority() (byte, error) {
 	if engine.priority < 255 {
 		engine.priority++
+		engine.SendBuf[2] = byte(engine.priority)
+		engine.SendBuf[3] = byte(engine.priority)
 		return engine.priority, nil
 	}
 	return engine.priority, fmt.Errorf("priority cannot be raised any more")
