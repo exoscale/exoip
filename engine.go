@@ -126,7 +126,7 @@ func (engine *Engine) NetworkLoop() error {
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
 	assertSuccess(err)
 
-	Logger.Info(fmt.Sprintf("listening on %s", ServerAddr))
+	Logger.Info("listening on %s", ServerAddr)
 	buf := make([]byte, payloadLength)
 	for {
 		n, addr, err := ServerConn.ReadFromUDP(buf)
@@ -156,19 +156,19 @@ func (engine *Engine) NetworkLoop() error {
 
 // Info logs the exoip current state (for debugging)
 func (engine *Engine) Info() {
-	Logger.Info(fmt.Sprintf("VirtualMachine IP: %s", engine.VirtualMachineID))
-	Logger.Info(fmt.Sprintf("Nic IP: %s", engine.NicID))
-	Logger.Info(fmt.Sprintf("Elastic IP: %s", engine.ElasticIP.String()))
-	Logger.Info(fmt.Sprintf("Dead ratio: %d", engine.DeadRatio))
-	Logger.Info(fmt.Sprintf("Priority: %d", engine.priority))
-	Logger.Info(fmt.Sprintf("State: %s", engine.State))
-	Logger.Info(fmt.Sprintf("Last Sent: %s", engine.LastSend.Format(time.RFC3339)))
+	Logger.Info("VirtualMachine IP: %s", engine.VirtualMachineID)
+	Logger.Info("Nic IP: %s", engine.NicID)
+	Logger.Info("Elastic IP: %s", engine.ElasticIP.String())
+	Logger.Info("Dead ratio: %d", engine.DeadRatio)
+	Logger.Info("Priority: %d", engine.priority)
+	Logger.Info("State: %s", engine.State)
+	Logger.Info("Last Sent: %s", engine.LastSend.Format(time.RFC3339))
 
 	engine.peersMu.RLock()
 	defer engine.peersMu.RUnlock()
 
 	for k, peer := range engine.peers {
-		Logger.Info(fmt.Sprintf("Peer: %s", k))
+		Logger.Info("Peer: %s", k)
 		peer.Info()
 	}
 }
@@ -242,14 +242,14 @@ func (engine *Engine) ObtainNic(nicID string) error {
 	})
 
 	if err != nil {
-		Logger.Crit(fmt.Sprintf("could not add ip %s to nic %s: %s",
+		Logger.Crit("could not add ip %s to nic %s: %s",
 			engine.ElasticIP,
 			nicID,
-			err))
+			err)
 		return err
 	}
 
-	Logger.Info(fmt.Sprintf("claimed ip %s on nic %s", engine.ElasticIP.String(), nicID))
+	Logger.Info("claimed ip %s on nic %s", engine.ElasticIP.String(), nicID)
 	return nil
 }
 
@@ -262,7 +262,7 @@ func (engine *Engine) ReleaseMyNic() error {
 	}
 
 	if err := client.Get(vm); err != nil {
-		Logger.Crit(fmt.Sprintf("could not get virtualmachine: %s. %s", vm.ID, err))
+		Logger.Crit("could not get virtualmachine: %s. %s", vm.ID, err)
 		return err
 	}
 
@@ -290,12 +290,12 @@ func (engine *Engine) ReleaseMyNic() error {
 		ID: nicAddressID,
 	}
 	if err := client.BooleanRequest(req); err != nil {
-		Logger.Crit(fmt.Sprintf("could not dissociate ip %s (%s): %s",
-			engine.ElasticIP.String(), nicAddressID, err))
+		Logger.Crit("could not disassociate ip %s (%s): %s",
+			engine.ElasticIP.String(), nicAddressID, err)
 		return err
 	}
 
-	Logger.Info(fmt.Sprintf("released ip %s", engine.ElasticIP.String()))
+	Logger.Info("released ip %s", engine.ElasticIP.String())
 	return nil
 }
 
@@ -308,7 +308,7 @@ func (engine *Engine) ReleaseNic(vmID string, nicID string) error {
 	}
 	err := client.Get(vm)
 	if err != nil {
-		Logger.Crit(fmt.Sprintf("could not remove ip from nic vm:%s. %s", vmID, err))
+		Logger.Crit("could not remove IP from NIC VM:%s. %s", vmID, err)
 		return err
 	}
 
@@ -323,19 +323,18 @@ func (engine *Engine) ReleaseNic(vmID string, nicID string) error {
 		}
 	}
 
-	if len(nicAddressID) == 0 {
-		Logger.Warning("no vm holds the ipaddress")
-		return fmt.Errorf("")
+	if nicAddressID == "" {
+		Logger.Warning("vm %s doesn't hold the ipaddress %s", vmID, engine.ElasticIP)
+		return fmt.Errorf("vm %s doesn't hold the ipaddress %s", vmID, engine.ElasticIP)
 	}
 
 	req := &egoscale.RemoveIPFromNic{ID: nicAddressID}
 	if err := client.BooleanRequest(req); err != nil {
-		Logger.Crit(fmt.Sprintf("could not remove ip from nic %s (%s): %s",
-			nicID, nicAddressID, err))
+		Logger.Crit("could not remove ip from nic %s (%s): %s", nicID, nicAddressID, err)
 		return err
 	}
 
-	Logger.Info(fmt.Sprintf("released ip %s from nic %s", engine.ElasticIP.String(), nicID))
+	Logger.Info("released ip %s from nic %s", engine.ElasticIP.String(), nicID)
 	return nil
 }
 
@@ -369,13 +368,13 @@ func (engine *Engine) UpdateNic() error {
 
 	// disassociate the IP from self if still present and backup
 	if engine.State == StateBackup && found {
-		Logger.Warning(fmt.Sprintf("state is %s but the eip was found, release", engine.State))
+		Logger.Warning("state is %s but the eip was found, release", engine.State)
 		return engine.ReleaseNic(engine.VirtualMachineID, engine.NicID)
 	}
 
 	// associate the IP to self if missing and Master
 	if engine.State == StateMaster && !found {
-		Logger.Warning(fmt.Sprintf("state is %s but the eip was missing, obtain", engine.State))
+		Logger.Warning("state is %s but the eip was missing, obtain", engine.State)
 		return engine.ObtainNic(engine.NicID)
 	}
 
@@ -395,7 +394,7 @@ func (engine *Engine) UpdatePeers() error {
 		ZoneID: engine.ZoneID,
 	}
 
-	Logger.Info(fmt.Sprintf("Updating peers %s (zone: %s)", engine.SecurityGroupName, engine.ZoneID))
+	Logger.Info("updating peers %s (zone: %s)", engine.SecurityGroupName, engine.ZoneID)
 	vms, err := client.List(vm)
 	if err != nil {
 		return err
@@ -437,7 +436,7 @@ func (engine *Engine) UpdatePeers() error {
 					return err
 				}
 
-				Logger.Info(fmt.Sprintf("Found new peer %s (vm: %s)", key, vm.ID))
+				Logger.Info("found new peer %s (vm: %s)", key, vm.ID)
 				engine.peers[key] = NewPeer(engine.ListenAddress, addr, vm.ID, vm.DefaultNic().ID)
 			} else {
 				delete(knownPeers, key)
@@ -447,7 +446,7 @@ func (engine *Engine) UpdatePeers() error {
 
 	// Remove extra peers from list of known peers
 	for key := range knownPeers {
-		Logger.Info(fmt.Sprintf("removing peer %s", key))
+		Logger.Info("removing peer %s", key)
 		delete(engine.peers, key)
 	}
 
@@ -479,9 +478,9 @@ func (engine *Engine) PeerIsNewlyDead(now time.Time, peer *Peer) bool {
 	dead := peerDiff > (engine.Interval * time.Duration(engine.DeadRatio))
 	if dead != peer.Dead {
 		if dead {
-			Logger.Info(fmt.Sprintf("peer %s last seen %s (%dms ago), considering dead.", peer.UDPAddr.IP, peer.LastSeen.Format(time.RFC3339), peerDiff/time.Millisecond))
+			Logger.Info("peer %s last seen %s (%dms ago), considering dead.", peer.UDPAddr.IP, peer.LastSeen.Format(time.RFC3339), peerDiff/time.Millisecond)
 		} else {
-			Logger.Info(fmt.Sprintf("peer %s, is now back alive.", peer.UDPAddr.IP))
+			Logger.Info("peer %s, is now back alive.", peer.UDPAddr.IP)
 		}
 		peer.Dead = dead
 		return dead
@@ -501,7 +500,7 @@ func (engine *Engine) PerformStateTransition(state State) {
 		return
 	}
 
-	Logger.Info(fmt.Sprintf("swiching state to %s", state))
+	Logger.Info("switching state to %s", state)
 
 	var err error
 	if state == StateBackup {
