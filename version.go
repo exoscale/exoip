@@ -1,4 +1,4 @@
 package exoip
 
 // Version represents exoip version
-const Version = "0.3.11-SNAPSHOT"
+const Version = "0.3.11"
