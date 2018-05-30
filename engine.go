@@ -501,7 +501,7 @@ func (engine *Engine) PerformStateTransition(state State) {
 		return
 	}
 
-	Logger.Info(fmt.Sprintf("swiching state to %s", state))
+	Logger.Info("swiching state to %s", state)
 
 	var err error
 	if state == StateBackup {
@@ -511,7 +511,7 @@ func (engine *Engine) PerformStateTransition(state State) {
 	}
 
 	if err != nil {
-		Logger.Crit(fmt.Sprintf("could not switch state. %s", err))
+		Logger.Crit("could not switch state. %s", err)
 		return
 	}
 
@@ -538,10 +538,9 @@ func (engine *Engine) CheckState() {
 	for _, peer := range engine.peers {
 		if engine.PeerIsNewlyDead(now, peer) {
 			deadPeers = append(deadPeers, peer)
-		} else {
-			if engine.BackupOf(peer) {
-				bestAdvertisement = false
-			}
+		}
+		if !peer.Dead {
+			bestAdvertisement = bestAdvertisement && !engine.BackupOf(peer)
 		}
 	}
 
