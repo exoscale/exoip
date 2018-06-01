@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "caa6b3727b959d704dda224fb7a63fae3c14d8fb"
-  version = "v0.9.26"
+  revision = "43703f86849566a547e8f1812508ab873e8d12dd"
+  version = "v0.9.27"
 
 [[projects]]
   branch = "master"
@@ -37,6 +37,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f870484299be970b72277b7696ecd381b28a7447934fe3b1fa50b2fab75b269f"
+  inputs-digest = "7b9241f23c655ad62f24ab769ed8d0d8080b473a280736c308d44a6745c60989"
   solver-name = "gps-cdcl"
   solver-version = 1
