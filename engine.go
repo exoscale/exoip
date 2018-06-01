@@ -347,7 +347,9 @@ func (engine *Engine) UpdateNic() error {
 		ID: engine.VirtualMachineID,
 	}
 	err := client.Get(vm)
-	assertSuccessOrExit(err)
+	if err != nil {
+		return fmt.Errorf("error fetching VM %s information, %s", engine.VirtualMachineID, err)
+	}
 
 	nic := vm.DefaultNic()
 	if nic == nil {
