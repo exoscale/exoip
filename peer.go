@@ -16,11 +16,11 @@ func NewPeer(listenAddress string, raddr *net.UDPAddr, id, nicID string) *Peer {
 		local := listenAddress[0:i]
 		var err error
 		laddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:0", local))
-		assertSuccess(err)
+		assertSuccessOrExit(err)
 	}
 
 	conn, err := net.DialUDP("udp", laddr, raddr)
-	assertSuccess(err)
+	assertSuccessOrExit(err)
 
 	return &Peer{
 		VirtualMachineID: id,

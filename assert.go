@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-// assertSuccess logs the error and exists if something bad occurs
-func assertSuccess(err error) {
+// assertSuccessOrExit logs the error and exists if something bad occurs
+func assertSuccessOrExit(err error) {
 	if err == nil {
 		return
 	}

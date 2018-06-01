@@ -31,14 +31,14 @@ func NewEngineWatchdog(client *egoscale.Client, addr, ip, instanceID string, int
 	prio int, deadRatio int, peers []string, securityGroupName string) *Engine {
 
 	zoneID, nicID, err := fetchMyInfo(client, instanceID)
-	assertSuccess(err)
+	assertSuccessOrExit(err)
 
 	uuidbuf, err := StrToUUID(nicID)
-	assertSuccess(err)
+	assertSuccessOrExit(err)
 
 	sendbuf := make([]byte, payloadLength)
 	protobuf, err := hex.DecodeString(ProtoVersion)
-	assertSuccess(err)
+	assertSuccessOrExit(err)
 	netip := net.ParseIP(ip)
 	if netip == nil {
 		Logger.Crit("Could not parse IP")
@@ -86,7 +86,7 @@ func NewEngineWatchdog(client *egoscale.Client, addr, ip, instanceID string, int
 
 	for _, peerAddress := range peers {
 		peer, err := engine.FetchPeer(peerAddress)
-		assertSuccess(err)
+		assertSuccessOrExit(err)
 
 		engine.peers[peerAddress] = peer
 	}
@@ -122,9 +122,9 @@ func NewEngine(client *egoscale.Client, ipAddress, instanceID string) *Engine {
 // NetworkLoop starts the UDP server
 func (engine *Engine) NetworkLoop() error {
 	ServerAddr, err := net.ResolveUDPAddr("udp", engine.ListenAddress)
-	assertSuccess(err)
+	assertSuccessOrExit(err)
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
-	assertSuccess(err)
+	assertSuccessOrExit(err)
 
 	Logger.Info(fmt.Sprintf("listening on %s", ServerAddr))
 	buf := make([]byte, payloadLength)
@@ -222,11 +222,11 @@ func (engine *Engine) FetchNicAndVM() {
 		ID: engine.VirtualMachineID,
 	}
 	err := client.Get(vm)
-	assertSuccess(err)
+	assertSuccessOrExit(err)
 
 	nic := vm.DefaultNic()
 	if nic == nil {
-		assertSuccess(fmt.Errorf("cannot find self default nic"))
+		assertSuccessOrExit(fmt.Errorf("cannot find self default nic"))
 	}
 
 	engine.NicID = nic.ID
@@ -347,7 +347,7 @@ func (engine *Engine) UpdateNic() error {
 		ID: engine.VirtualMachineID,
 	}
 	err := client.Get(vm)
-	assertSuccess(err)
+	assertSuccessOrExit(err)
 
 	nic := vm.DefaultNic()
 	if nic == nil {
