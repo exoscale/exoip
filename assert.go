@@ -11,6 +11,9 @@ func assertSuccessOrExit(err error) {
 		return
 	}
 	Logger.Crit(fmt.Sprintf("fatal: %s", err))
-	fmt.Fprintln(os.Stderr, "fatal error:", err)
+	_, err = fmt.Fprintf(os.Stderr, "fatal error: %s\n", err)
+	if err != nil {
+		panic(err)
+	}
 	os.Exit(1)
 }

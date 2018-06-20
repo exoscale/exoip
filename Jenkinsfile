@@ -81,7 +81,7 @@ def test(repo) {
   }
 }
 
-def build(repo, ...bin) {
+def build(repo, ...bins) {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.10')
     image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/${repo}") {
@@ -97,6 +97,6 @@ def docker(repo) {
   def branch = getGitBranch()
   def tag = getGitTag() ?: (branch == "master" ? "latest" : branch)
   docker.withRegistry('https://registry.internal.exoscale.ch') {
-    return image = docker.build("registry.internal.exoscale.ch/${repo}:${tag}", "--network host .")
+    return docker.build("registry.internal.exoscale.ch/${repo}:${tag}", "--network host .")
   }
 }

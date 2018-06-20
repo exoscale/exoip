@@ -10,7 +10,10 @@ import (
 // Warning logs a message with severity LOG_WARNING
 func (l *wrappedLogger) Warning(msg string, v ...interface{}) {
 	if l.syslog {
-		l.syslogWriter.Warning(fmt.Sprintf(msg, v...))
+		err := l.syslogWriter.Warning(fmt.Sprintf(msg, v...))
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		l.stdWriter.Printf("[WARNING] "+msg, v...)
 	}
@@ -19,7 +22,10 @@ func (l *wrappedLogger) Warning(msg string, v ...interface{}) {
 // Crit logs a message with severity LOG_CRIT
 func (l *wrappedLogger) Crit(msg string, v ...interface{}) {
 	if l.syslog {
-		l.syslogWriter.Crit(fmt.Sprintf(msg, v...))
+		err := l.syslogWriter.Crit(fmt.Sprintf(msg, v...))
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		l.stdWriter.Printf("[CRIT   ] "+msg, v...)
 	}
@@ -28,7 +34,10 @@ func (l *wrappedLogger) Crit(msg string, v ...interface{}) {
 // Info logs a message with severity LOG_INFO
 func (l *wrappedLogger) Info(msg string, v ...interface{}) {
 	if l.syslog {
-		l.syslogWriter.Info(fmt.Sprintf(msg, v...))
+		err := l.syslogWriter.Info(fmt.Sprintf(msg, v...))
+		if err != nil {
+			panic(err)
+		}
 	} else if Verbose {
 		l.stdWriter.Printf("[INFO   ] "+msg, v...)
 	}
@@ -42,7 +51,10 @@ func SetupLogger(logStdout bool) {
 	} else {
 		logger, err := syslog.New(syslog.LOG_DAEMON, "exoip")
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "fatal error:", err)
+			_, errP := fmt.Fprintf(os.Stderr, "fatal error: %s\n", err)
+			if errP != nil {
+				panic(errP)
+			}
 			os.Exit(1)
 		}
 		Logger = &wrappedLogger{syslog: true, syslogWriter: logger}
