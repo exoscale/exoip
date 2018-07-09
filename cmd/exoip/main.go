@@ -78,7 +78,9 @@ func parseEnvironment() {
 	for _, env := range envFlags {
 		v := os.Getenv(env.Env)
 		if len(v) > 0 {
-			flag.Set(env.Flag, v)
+			if err := flag.Set(env.Flag, v); err != nil {
+				panic(err)
+			}
 		}
 	}
 
@@ -119,7 +121,9 @@ func checkMode() bool {
 	}
 
 	if i != 1 {
-		fmt.Fprintln(os.Stderr, "need exactly one of -A, -D, or -W")
+		if _, err := fmt.Fprintln(os.Stderr, "need exactly one of -A, -D, or -W"); err != nil {
+			panic(err)
+		}
 		exoip.Logger.Info("invalid mode: need exactly one of -A, -D, or -W")
 		return false
 	}
@@ -130,7 +134,9 @@ func checkMode() bool {
 func checkEIP() bool {
 	if len(*eip) == 0 {
 		exoip.Logger.Crit("no Exoscale IP provided")
-		fmt.Fprintln(os.Stderr, "no Exoscale IP provided")
+		if _, err := fmt.Fprintln(os.Stderr, "no Exoscale IP provided"); err != nil {
+			panic(err)
+		}
 		return false
 	}
 	return true
@@ -139,7 +145,9 @@ func checkEIP() bool {
 func checkPeerAndSecurityGroups() bool {
 	if len(peers) > 0 && len(*exoSecurityGroup) > 0 {
 		exoip.Logger.Crit("ambiguous peer definition (-p and -G given)")
-		fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
+		if _, err := fmt.Fprintln(os.Stderr, "-p and -G options are exclusive"); err != nil {
+			panic(err)
+		}
 		return false
 	}
 	return true
@@ -148,7 +156,9 @@ func checkPeerAndSecurityGroups() bool {
 func checkPeerDefinition() bool {
 	if len(peers) == 0 && len(*exoSecurityGroup) == 0 {
 		exoip.Logger.Crit("need peer definition (either -p or -G)")
-		fmt.Fprintln(os.Stderr, "need peer definition (either -p or -G)")
+		if _, err := fmt.Fprintln(os.Stderr, "need peer definition (either -p or -G)"); err != nil {
+			panic(err)
+		}
 		return false
 	}
 	return true
@@ -157,7 +167,9 @@ func checkPeerDefinition() bool {
 func checkHostPriority() bool {
 	if *prio < 0 || *prio > 255 {
 		exoip.Logger.Crit("invalid host priority (must be 0-255)")
-		fmt.Fprintln(os.Stderr, "invalid host priority (must be 0-255)")
+		if _, err := fmt.Fprintln(os.Stderr, "invalid host priority (must be 0-255)"); err != nil {
+			panic(err)
+		}
 		return false
 	}
 
@@ -167,7 +179,9 @@ func checkHostPriority() bool {
 func checkAPI() bool {
 	if len(*exoToken) == 0 || len(*csEndpoint) == 0 || len(*exoSecret) == 0 {
 		exoip.Logger.Crit("insufficient API credentials")
-		fmt.Fprintln(os.Stderr, "insufficient API credentials")
+		if _, err := fmt.Fprintln(os.Stderr, "insufficient API credentials"); err != nil {
+			panic(err)
+		}
 		return false
 	}
 	return true
@@ -230,30 +244,38 @@ func main() {
 	if (*instanceID) == "" {
 		mserver, err := exoip.FindMetadataServer()
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
+				panic(errP)
+			}
 			os.Exit(1)
 		}
 		(*instanceID), err = exoip.FetchMetadata(mserver, "/latest/instance-id")
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
+				panic(errP)
+			}
 			os.Exit(1)
 		}
 	}
 
 	ego := egoscale.NewClient(*csEndpoint, *exoToken, *exoSecret)
 	if *associateMode {
-		engine := exoip.NewEngine(ego, *eip, *instanceID)
+		engine = exoip.NewEngine(ego, *eip, *instanceID)
 		if err := engine.ObtainNic(engine.NicID); err != nil {
-			fmt.Fprint(os.Stderr, err)
+			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
+				panic(errP)
+			}
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
 
 	if *disassociateMode {
-		engine := exoip.NewEngine(ego, *eip, *instanceID)
+		engine = exoip.NewEngine(ego, *eip, *instanceID)
 		if err := engine.ReleaseMyNic(); err != nil {
-			fmt.Fprint(os.Stderr, err)
+			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
+				panic(errP)
+			}
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -289,7 +311,9 @@ func main() {
 
 	if len(*exoSecurityGroup) > 0 {
 		if len(peers) > 0 {
-			fmt.Fprintln(os.Stderr, "-p and -G options are exclusive")
+			if _, err := fmt.Fprintln(os.Stderr, "-p and -G options are exclusive"); err != nil {
+				panic(err)
+			}
 			os.Exit(1)
 		}
 
@@ -307,7 +331,9 @@ func main() {
 		for {
 			sig := <-sigs
 			exoip.Logger.Info("got sig: %+v", sig)
-			fmt.Fprintf(os.Stderr, "got sig: %+v\n", sig)
+			if _, err := fmt.Fprintf(os.Stderr, "got sig: %+v\n", sig); err != nil {
+				exoip.Logger.Crit(err.Error())
+			}
 			switch sig {
 			case syscall.SIGUSR1:
 				prio, err := engine.LowerPriority()
@@ -326,7 +352,9 @@ func main() {
 			default:
 				if engine.State == exoip.StateMaster {
 					exoip.Logger.Info("releasing the Nic and stopping.")
-					fmt.Fprintln(os.Stderr, "releasing the Nic and stopping")
+					if _, err := fmt.Fprintln(os.Stderr, "releasing the Nic and stopping"); err != nil {
+						exoip.Logger.Crit(err.Error())
+					}
 					if err := engine.ReleaseMyNic(); err != nil {
 						exoip.Logger.Crit(err.Error())
 						os.Exit(1)
@@ -337,21 +365,21 @@ func main() {
 		}
 	}()
 
-	engine.UpdatePeers()
+	engine.UpdatePeers() // nolint: errcheck
 
 	go func() {
 		// update list of peers, every 5 minutes
-		interval := time.Duration(5 * time.Minute)
+		interval := 5 * time.Minute
 		var elapsed time.Duration
 		for {
 			time.Sleep(interval - elapsed)
 
 			start := time.Now()
-			engine.UpdatePeers()
+			engine.UpdatePeers() // nolint: errcheck
 			if err := engine.UpdateNic(); err != nil {
 				exoip.Logger.Crit(err.Error())
 			}
-			elapsed = time.Now().Sub(start)
+			elapsed = time.Since(start)
 		}
 	}()
 
@@ -362,8 +390,8 @@ func main() {
 			time.Sleep(engine.Interval - elapsed)
 
 			start := time.Now()
-			engine.PingPeers()
-			elapsed = time.Now().Sub(start)
+			engine.PingPeers() // nolint: errcheck
+			elapsed = time.Since(start)
 			if elapsed > engine.Interval {
 				exoip.Logger.Warning("PingPeers took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond)
 			}
@@ -378,7 +406,7 @@ func main() {
 
 			start := time.Now()
 			engine.CheckState()
-			elapsed = time.Now().Sub(start)
+			elapsed = time.Since(start)
 			if elapsed > engine.Interval {
 				exoip.Logger.Warning("CheckState took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond)
 			}
@@ -386,6 +414,9 @@ func main() {
 	}()
 
 	exoip.Logger.Info("starting watchdog")
-	engine.NetworkLoop()
+	err := engine.NetworkLoop()
+	if err != nil {
+		panic(err)
+	}
 	os.Exit(0)
 }

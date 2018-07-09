@@ -22,10 +22,7 @@ const payloadLength = 24
 //     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 //
 func NewPayload(buf []byte) (*Payload, error) {
-	protobuf := make([]byte, 2)
-	protobuf = buf[0:2]
-
-	version := hex.EncodeToString(protobuf)
+	version := hex.EncodeToString(buf[0:2])
 	if ProtoVersion != version {
 		Logger.Warning(fmt.Sprintf("bad protocol version, got %v", version))
 		return nil, errors.New("bad protocol version")

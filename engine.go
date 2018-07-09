@@ -42,13 +42,19 @@ func NewEngineWatchdog(client *egoscale.Client, addr, ip, instanceID string, int
 	netip := net.ParseIP(ip)
 	if netip == nil {
 		Logger.Crit("Could not parse IP")
-		fmt.Fprintln(os.Stderr, "Could not parse IP")
+		_, errP := fmt.Fprintf(os.Stderr, "Could not parse IP %q\n", ip)
+		if errP != nil {
+			panic(errP)
+		}
 		os.Exit(1)
 	}
 	netip = netip.To4()
 	if netip == nil {
-		Logger.Crit("Unsupported IPv6 Address")
-		fmt.Fprintln(os.Stderr, "Unsupported IPv6 Address")
+		Logger.Crit("IPv6 addresses are unsupported")
+		_, errP := fmt.Fprintf(os.Stderr, "IPv6 addresses are unsupported %q\n", ip)
+		if errP != nil {
+			panic(errP)
+		}
 		os.Exit(1)
 	}
 
@@ -100,13 +106,19 @@ func NewEngine(client *egoscale.Client, ipAddress, instanceID string) *Engine {
 	netip := net.ParseIP(ipAddress)
 	if netip == nil {
 		Logger.Crit("Could not parse IP")
-		fmt.Fprintln(os.Stderr, "Could not parse IP")
+		_, err := fmt.Fprintf(os.Stderr, "Could not parse IP %s\n", ipAddress)
+		if err != nil {
+			panic(err)
+		}
 		os.Exit(1)
 	}
 	netip = netip.To4()
 	if netip == nil {
-		Logger.Crit("Unsupported IPv6 Address")
-		fmt.Fprintln(os.Stderr, "Unsupported IPv6 Address")
+		Logger.Crit("IPv6 addresses are unsupported %q", ipAddress)
+		_, err := fmt.Fprintf(os.Stderr, "IPv6 addresses are unsupported %q\n", ipAddress)
+		if err != nil {
+			panic(err)
+		}
 		os.Exit(1)
 	}
 
@@ -180,7 +192,7 @@ func (engine *Engine) PingPeers() error {
 
 	for _, peer := range engine.peers {
 		// do not account for errors
-		peer.Send(engine.SendBuf)
+		peer.Send(engine.SendBuf) // nolint: errcheck
 	}
 	engine.LastSend = time.Now()
 	return nil
@@ -556,7 +568,10 @@ func (engine *Engine) CheckState() {
 	// and reobtain the Nic for ourself (split-brain)
 	if len(deadPeers) > 0 {
 		for _, peer := range deadPeers {
-			engine.ReleaseNic(peer.VirtualMachineID, peer.NicID)
+			err := engine.ReleaseNic(peer.VirtualMachineID, peer.NicID)
+			if err != nil {
+				Logger.Crit(err.Error())
+			}
 		}
 
 		if err := engine.UpdateNic(); err != nil {
@@ -569,8 +584,8 @@ func (engine *Engine) CheckState() {
 func (engine *Engine) LowerPriority() (byte, error) {
 	if engine.priority > 1 {
 		engine.priority--
-		engine.SendBuf[2] = byte(engine.priority)
-		engine.SendBuf[3] = byte(engine.priority)
+		engine.SendBuf[2] = engine.priority
+		engine.SendBuf[3] = engine.priority
 		return engine.priority, nil
 	}
 	return engine.priority, fmt.Errorf("priority cannot be lowered any more")
@@ -580,8 +595,8 @@ func (engine *Engine) LowerPriority() (byte, error) {
 func (engine *Engine) RaisePriority() (byte, error) {
 	if engine.priority < 255 {
 		engine.priority++
-		engine.SendBuf[2] = byte(engine.priority)
-		engine.SendBuf[3] = byte(engine.priority)
+		engine.SendBuf[2] = engine.priority
+		engine.SendBuf[3] = engine.priority
 		return engine.priority, nil
 	}
 	return engine.priority, fmt.Errorf("priority cannot be raised any more")
