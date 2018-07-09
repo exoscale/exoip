@@ -18,7 +18,7 @@ node {
       stage('Build') {
         parallel (
           "go lint": {
-            golint(repo, ".", "cmd/exoip")
+            golint(repo, "cmd/exoip")
           },
           "go test": {
             test(repo)
