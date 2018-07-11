@@ -102,8 +102,8 @@ If you wish to inspect **exoip** and build it by yourself, you can install it by
 
     go get -d github.com/exoscale/exoip
     cd $GOPATH/src/github.com/exoscale/exoip
-    dep ensure -vendor-only
-    make
+    dep ensure -v -vendor-only
+    go install
 
 ### Updating
 
