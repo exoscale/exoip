@@ -4,14 +4,8 @@
 [[projects]]
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "8dc4d6e2c2fc970475f5c29da7deed86cb6ae4de"
-  version = "v0.10.3"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/jinzhu/copier"
-  packages = ["."]
-  revision = "7e38e58719c33e0d44d585c4ab477a30f8cb82dd"
+  revision = "809d3374d8a7429987c2faf8b3a8d3a669f33b57"
+  version = "v0.10.4"
 
 [[projects]]
   name = "github.com/vishvananda/netlink"
@@ -37,6 +31,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "acbe9125011ddc75cc4c204f369628b8bd6ffc0310528115c3839f5913216678"
+  inputs-digest = "3434a77949c6d10e8d362e39a616cb53a3ce7a1a6ac2e60a03970f68a8632320"
   solver-name = "gps-cdcl"
   solver-version = 1
