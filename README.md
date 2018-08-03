@@ -147,11 +147,11 @@ write_files:
       down killall exoip
 
 runcmd:
-- wget https://github.com/exoscale/exoip/releases/download/0.3.5/exoip
-- wget https://github.com/exoscale/exoip/releases/download/0.3.5/exoip.asc
+- wget https://github.com/exoscale/exoip/releases/download/0.3.14/exoip_0.3.14_linux_amd64.tar.gz
+- wget https://github.com/exoscale/exoip/releases/download/0.3.14/exoip_0.3.14_linux_amd64.tar.gz.sig
 - gpg --recv-keys E458F9F85608DF5A22ECCD158B58C61D4FFE0C86
-- gpg --verify --trust-model always exoip.asc
-- sudo chmod +x exoip
+- gpg --verify --trust-model always exoip_0.3.14_linux_amd64.tar.gz.sig
+- tar xf exoip_0.3.14_linux_amd64.tar.gz
 - sudo mv exoip /usr/local/bin/
 - sudo ifup lo:1
 ```
