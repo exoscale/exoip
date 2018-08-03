@@ -96,7 +96,14 @@ def build(repo, ...bins) {
 def docker(repo) {
   def branch = getGitBranch()
   def tag = getGitTag() ?: (branch == "master" ? "latest" : branch)
+  def ref = sh("git rev-parse HEAD")
+  def date = sh('date -u +"%Y-%m-%dT%H:%m:%SZ"')
   docker.withRegistry('https://registry.internal.exoscale.ch') {
-    return docker.build("registry.internal.exoscale.ch/${repo}:${tag}", "--network host .")
+    return docker.build(
+        "registry.internal.exoscale.ch/${repo}:${tag}",
+        "--network host --no-cache -f Dockerfile.exoscale "
+        + "--build-arg VCS_REF=$ref --build-arg BUILD_DATE=$date "
+        + "."
+    )
   }
 }
