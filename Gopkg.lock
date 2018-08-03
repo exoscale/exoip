@@ -4,14 +4,8 @@
 [[projects]]
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "631ee6ea16ccb48a0c98054fdbf0f6e94d8f4a8c"
-  version = "v0.9.31"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/jinzhu/copier"
-  packages = ["."]
-  revision = "7e38e58719c33e0d44d585c4ab477a30f8cb82dd"
+  revision = "d0b97c5313da1645585ba6c860e29161299849e1"
+  version = "v0.10.5"
 
 [[projects]]
   name = "github.com/vishvananda/netlink"
@@ -26,17 +20,17 @@
   branch = "master"
   name = "github.com/vishvananda/netns"
   packages = ["."]
-  revision = "be1fbeda19366dea804f00efff2dd73a1642fdcc"
+  revision = "13995c7128ccc8e51e9a6bd2b551020a27180abd"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
+  revision = "3dc4335d56c789b04b0ba99b7a37249d9b614314"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8af10fd34f2acac525b37b7a2026c73f342b344789790ee115019173ce1b8990"
+  inputs-digest = "c6ff2de85b755c906e76fb2e4175ef5f6e7aeee4fe7af1e54d5b0393abf40a3d"
   solver-name = "gps-cdcl"
   solver-version = 1
