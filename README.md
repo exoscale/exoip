@@ -155,3 +155,5 @@ runcmd:
 - sudo mv exoip /usr/local/bin/
 - sudo ifup lo:1
 ```
+
+**NB:** Since Ubuntu Bionic and the move to netplan, the configuration is a bit different. See the [dedicated documentation](https://community.exoscale.com/documentation/compute/eip/#configuring-the-instance-to-use-the-ip-address).
