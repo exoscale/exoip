@@ -1,29 +1,21 @@
-FROM golang:1.10-alpine as build
+FROM registry.internal.exoscale.ch/exoscale/golang:1.10 as build
 
 RUN mkdir -p /go/src/github.com/exoscale/exoip
 ADD . /go/src/github.com/exoscale/exoip
 WORKDIR /go/src/github.com/exoscale/exoip
 
-RUN apk add --no-cache \
-            --update \
-            --virtual build-dependencies \
-        make \
-        git \
- && go get github.com/golang/dep/cmd/dep \
- && cd /go/src/github.com/exoscale/exoip \
- && dep ensure -v -vendor-only \
+RUN dep ensure -v -vendor-only \
  && CGO_ENABLED=0 GOOS=linux go install -ldflags "-s" github.com/exoscale/exoip/cmd/exoip
 
+FROM registry.internal.exoscale.ch/exoscale/ubuntu:bionic
 
-FROM linuxkit/ca-certificates:v0.6
-
-LABEL org.label-schema.name="ExoIP" \
+LABEL org.label-schema.build-date=${BUILD_DATE} \
+      org.label-schema.name="ExoIP" \
       org.label-schema.vendor="Exoscale" \
       org.label-schema.description="IP watchdog" \
-      org.label-schema.url="https://github.com/exoscale/exoip" \
+      org.label-schema.vcs-ref=${VCS_REF} \
+      org.label-schema.vcs-url="https://github.com/exoscale/exoip" \
       org.label-schema.schema-version="1.0"
-
-
 
 COPY --from=build /go/bin/exoip exoip
 
