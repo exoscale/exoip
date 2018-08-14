@@ -27,28 +27,16 @@ var Verbose = false
 var Logger *wrappedLogger
 
 // NewEngineWatchdog creates an new watchdog engine
-func NewEngineWatchdog(client *egoscale.Client, addr, ip, instanceID string, interval int,
+func NewEngineWatchdog(client *egoscale.Client, addr string, ip net.IP, instanceID egoscale.UUID, interval int,
 	prio int, deadRatio int, peers []string, securityGroupName string) *Engine {
 
 	zoneID, nicID, err := fetchMyInfo(client, instanceID)
 	assertSuccessOrExit(err)
 
-	uuidbuf, err := StrToUUID(nicID)
-	assertSuccessOrExit(err)
-
 	sendbuf := make([]byte, payloadLength)
 	protobuf, err := hex.DecodeString(ProtoVersion)
 	assertSuccessOrExit(err)
-	netip := net.ParseIP(ip)
-	if netip == nil {
-		Logger.Crit("Could not parse IP")
-		_, errP := fmt.Fprintf(os.Stderr, "Could not parse IP %q\n", ip)
-		if errP != nil {
-			panic(errP)
-		}
-		os.Exit(1)
-	}
-	netip = netip.To4()
+	netip := ip.To4()
 	if netip == nil {
 		Logger.Crit("IPv6 addresses are unsupported")
 		_, errP := fmt.Fprintf(os.Stderr, "IPv6 addresses are unsupported %q\n", ip)
@@ -69,7 +57,7 @@ func NewEngineWatchdog(client *egoscale.Client, addr, ip, instanceID string, int
 	sendbuf[6] = netbytes[2]
 	sendbuf[7] = netbytes[3]
 
-	for i, b := range uuidbuf {
+	for i, b := range instanceID.UUID {
 		sendbuf[i+8] = b
 	}
 
@@ -85,7 +73,7 @@ func NewEngineWatchdog(client *egoscale.Client, addr, ip, instanceID string, int
 		State:             StateBackup,
 		NicID:             nicID,
 		ElasticIP:         netip,
-		VirtualMachineID:  instanceID,
+		VirtualMachineID:  &instanceID,
 		ZoneID:            zoneID,
 		InitHoldOff:       time.Now().Add(time.Duration(int64(interval)*int64(deadRatio))*time.Second + Skew),
 	}
@@ -101,21 +89,11 @@ func NewEngineWatchdog(client *egoscale.Client, addr, ip, instanceID string, int
 }
 
 // NewEngine creates a new engine
-func NewEngine(client *egoscale.Client, ipAddress, instanceID string) *Engine {
-
-	netip := net.ParseIP(ipAddress)
-	if netip == nil {
-		Logger.Crit("Could not parse IP")
-		_, err := fmt.Fprintf(os.Stderr, "Could not parse IP %s\n", ipAddress)
-		if err != nil {
-			panic(err)
-		}
-		os.Exit(1)
-	}
-	netip = netip.To4()
-	if netip == nil {
-		Logger.Crit("IPv6 addresses are unsupported %q", ipAddress)
-		_, err := fmt.Fprintf(os.Stderr, "IPv6 addresses are unsupported %q\n", ipAddress)
+func NewEngine(client *egoscale.Client, ipAddress net.IP, instanceID egoscale.UUID) *Engine {
+	ipAddress = ipAddress.To4()
+	if ipAddress == nil {
+		Logger.Crit("IPv6 addresses are not supported %q", ipAddress)
+		_, err := fmt.Fprintf(os.Stderr, "IPv6 addresses are not supported %q\n", ipAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -123,9 +101,9 @@ func NewEngine(client *egoscale.Client, ipAddress, instanceID string) *Engine {
 	}
 
 	engine := &Engine{
-		ElasticIP:        netip,
+		ElasticIP:        ipAddress,
 		client:           client,
-		VirtualMachineID: instanceID,
+		VirtualMachineID: &instanceID,
 	}
 	engine.FetchNicAndVM()
 	return engine
@@ -223,7 +201,7 @@ func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
 		return nil, fmt.Errorf("peer (%v) has no default nic", peerAddress)
 	}
 
-	return NewPeer(engine.ListenAddress, addr, vm.ID, nic.ID), nil
+	return NewPeer(engine.ListenAddress, addr, *vm.ID, *nic.ID), nil
 }
 
 // FetchNicAndVM fetches our NIC and the VirtualMachine
@@ -245,11 +223,11 @@ func (engine *Engine) FetchNicAndVM() {
 }
 
 // ObtainNic add the elastic IP to the given NIC
-func (engine *Engine) ObtainNic(nicID string) error {
+func (engine *Engine) ObtainNic(nicID egoscale.UUID) error {
 	client := engine.client
 
 	_, err := client.Request(&egoscale.AddIPToNic{
-		NicID:     nicID,
+		NicID:     &nicID,
 		IPAddress: engine.ElasticIP,
 	})
 
@@ -261,7 +239,7 @@ func (engine *Engine) ObtainNic(nicID string) error {
 		return err
 	}
 
-	Logger.Info("claimed ip %s on nic %s", engine.ElasticIP.String(), nicID)
+	Logger.Info("claimed ip %s on nic %s", engine.ElasticIP, nicID)
 	return nil
 }
 
@@ -278,7 +256,7 @@ func (engine *Engine) ReleaseMyNic() error {
 		return err
 	}
 
-	nicAddressID := ""
+	var nicAddressID *egoscale.UUID
 	nic := vm.DefaultNic()
 	if nic != nil {
 		for _, secIP := range nic.SecondaryIP {
@@ -293,7 +271,7 @@ func (engine *Engine) ReleaseMyNic() error {
 		}
 	}
 
-	if nicAddressID == "" {
+	if nicAddressID == nil {
 		Logger.Warning("could not remove ip from nic: unknown association")
 		return fmt.Errorf("could not remove ip from nic: unknown association")
 	}
@@ -312,11 +290,11 @@ func (engine *Engine) ReleaseMyNic() error {
 }
 
 // ReleaseNic removes the Elastic IP from the given NIC
-func (engine *Engine) ReleaseNic(vmID string, nicID string) error {
+func (engine *Engine) ReleaseNic(vmID, nicID egoscale.UUID) error {
 	client := engine.client
 
 	vm := &egoscale.VirtualMachine{
-		ID: vmID,
+		ID: &vmID,
 	}
 	err := client.Get(vm)
 	if err != nil {
@@ -324,9 +302,9 @@ func (engine *Engine) ReleaseNic(vmID string, nicID string) error {
 		return err
 	}
 
-	nicAddressID := ""
+	var nicAddressID *egoscale.UUID
 	nic := vm.DefaultNic()
-	if nic != nil && nic.ID == nicID {
+	if nic != nil && nic.ID.Equal(nicID) {
 		for _, secIP := range nic.SecondaryIP {
 			if secIP.IPAddress.Equal(engine.ElasticIP) {
 				nicAddressID = secIP.ID
@@ -335,7 +313,7 @@ func (engine *Engine) ReleaseNic(vmID string, nicID string) error {
 		}
 	}
 
-	if nicAddressID == "" {
+	if nicAddressID == nil {
 		Logger.Warning("vm %s doesn't hold the ipaddress %s", vmID, engine.ElasticIP)
 		return fmt.Errorf("vm %s doesn't hold the ipaddress %s", vmID, engine.ElasticIP)
 	}
@@ -383,13 +361,13 @@ func (engine *Engine) UpdateNic() error {
 	// disassociate the IP from self if still present and backup
 	if engine.State == StateBackup && found {
 		Logger.Warning("state is %s but the eip was found, release", engine.State)
-		return engine.ReleaseNic(engine.VirtualMachineID, engine.NicID)
+		return engine.ReleaseNic(*engine.VirtualMachineID, *engine.NicID)
 	}
 
 	// associate the IP to self if missing and Master
 	if engine.State == StateMaster && !found {
 		Logger.Warning("state is %s but the eip was missing, obtain", engine.State)
-		return engine.ObtainNic(engine.NicID)
+		return engine.ObtainNic(*engine.NicID)
 	}
 
 	return nil
@@ -451,7 +429,12 @@ func (engine *Engine) UpdatePeers() error {
 				}
 
 				Logger.Info("found new peer %s (vm: %s)", key, vm.ID)
-				engine.peers[key] = NewPeer(engine.ListenAddress, addr, vm.ID, vm.DefaultNic().ID)
+				nic := vm.DefaultNic()
+				if nic == nil {
+					Logger.Warning("no default nic found for %q", vm.ID)
+				} else {
+					engine.peers[key] = NewPeer(engine.ListenAddress, addr, *vm.ID, *nic.ID)
+				}
 			} else {
 				delete(knownPeers, key)
 			}
@@ -518,13 +501,13 @@ func (engine *Engine) PerformStateTransition(state State) {
 
 	var err error
 	if state == StateBackup {
-		err = engine.ReleaseNic(engine.VirtualMachineID, engine.NicID)
+		err = engine.ReleaseNic(*engine.VirtualMachineID, *engine.NicID)
 	} else {
-		err = engine.ObtainNic(engine.NicID)
+		err = engine.ObtainNic(*engine.NicID)
 	}
 
 	if err != nil {
-		Logger.Crit(fmt.Sprintf("could not switch state. %s", err))
+		Logger.Crit("could not switch state. %s", err)
 		return
 	}
 
@@ -568,7 +551,7 @@ func (engine *Engine) CheckState() {
 	// and reobtain the Nic for ourself (split-brain)
 	if len(deadPeers) > 0 {
 		for _, peer := range deadPeers {
-			err := engine.ReleaseNic(peer.VirtualMachineID, peer.NicID)
+			err := engine.ReleaseNic(*peer.VirtualMachineID, *peer.NicID)
 			if err != nil {
 				Logger.Crit(err.Error())
 			}

@@ -8,18 +8,18 @@ import (
 )
 
 // fetchMyInfo fetches the nic of the current instance
-func fetchMyInfo(ego *egoscale.Client, instanceID string) (string, string, error) {
+func fetchMyInfo(ego *egoscale.Client, instanceID egoscale.UUID) (*egoscale.UUID, *egoscale.UUID, error) {
 
 	vm := &egoscale.VirtualMachine{
-		ID: instanceID,
+		ID: &instanceID,
 	}
 	if err := ego.Get(vm); err != nil {
-		return "", "", err
+		return nil, nil, err
 	}
 
 	nic := vm.DefaultNic()
 	if nic == nil {
-		return "", "", errors.New("cannot find virtual machine default nic")
+		return nil, nil, errors.New("cannot find virtual machine default nic")
 	}
 
 	return vm.ZoneID, nic.ID, nil
@@ -37,11 +37,11 @@ func VMHasSecurityGroup(vm *egoscale.VirtualMachine, sgname string) bool {
 }
 
 // FindPeerNic return the NIC ID of a given peer
-func FindPeerNic(ego *egoscale.Client, ip string) (string, error) {
+func FindPeerNic(ego *egoscale.Client, ip string) (*egoscale.UUID, error) {
 
 	vms, err := ego.List(new(egoscale.VirtualMachine))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, i := range vms {
@@ -52,5 +52,5 @@ func FindPeerNic(ego *egoscale.Client, ip string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("cannot find nic")
+	return nil, fmt.Errorf("cannot find nic")
 }

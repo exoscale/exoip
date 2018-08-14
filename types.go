@@ -12,12 +12,12 @@ import (
 
 // Peer represents a peer machine
 type Peer struct {
-	VirtualMachineID string
+	VirtualMachineID *egoscale.UUID
 	UDPAddr          *net.UDPAddr
 	Dead             bool
 	Priority         byte
 	LastSeen         time.Time
-	NicID            string
+	NicID            *egoscale.UUID
 	conn             *net.UDPConn
 }
 
@@ -25,7 +25,7 @@ type Peer struct {
 type Payload struct {
 	Priority byte
 	IP       net.IP
-	NicID    string
+	NicID    *egoscale.UUID
 }
 
 type wrappedLogger struct {
@@ -48,8 +48,8 @@ type Engine struct {
 	LastSend          time.Time
 	InitHoldOff       time.Time
 	ElasticIP         net.IP
-	VirtualMachineID  string
+	VirtualMachineID  *egoscale.UUID
 	SecurityGroupName string
-	NicID             string
-	ZoneID            string
+	NicID             *egoscale.UUID
+	ZoneID            *egoscale.UUID
 }
