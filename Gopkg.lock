@@ -2,35 +2,54 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:635d91586d88010009079c664a9f8264835c8055197e6fafb04f9134b8a8a1b0"
   name = "github.com/exoscale/egoscale"
   packages = ["."]
-  revision = "d0b97c5313da1645585ba6c860e29161299849e1"
-  version = "v0.10.5"
+  pruneopts = ""
+  revision = "81b6b6dcb55291f2612feed053cd6327c55e2a4a"
 
 [[projects]]
+  digest = "1:7f569d906bdd20d906b606415b7d794f798f91a62fcfb6a4daa6d50690fb7a3f"
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  pruneopts = ""
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:dc7dae4a4ee322cb9852ba4cec6a0a61815cc2870d79b0c25edfb75e3bd618ec"
   name = "github.com/vishvananda/netlink"
   packages = [
     ".",
-    "nl"
+    "nl",
   ]
+  pruneopts = ""
   revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
   version = "v1.0.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:c09fddfdd491edaa4383396503e57023a26e5a824283a78c2310613a1252c649"
   name = "github.com/vishvananda/netns"
   packages = ["."]
+  pruneopts = ""
   revision = "13995c7128ccc8e51e9a6bd2b551020a27180abd"
 
 [[projects]]
   branch = "master"
+  digest = "1:469d265422d3992c7af23257fb8198d4d9348156b73ea89ae56d8117d4b89005"
   name = "golang.org/x/sys"
   packages = ["unix"]
+  pruneopts = ""
   revision = "3dc4335d56c789b04b0ba99b7a37249d9b614314"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c6ff2de85b755c906e76fb2e4175ef5f6e7aeee4fe7af1e54d5b0393abf40a3d"
+  input-imports = [
+    "github.com/exoscale/egoscale",
+    "github.com/vishvananda/netlink",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
