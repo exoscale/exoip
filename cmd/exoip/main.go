@@ -374,7 +374,9 @@ func main() {
 		}
 	}()
 
-	engine.UpdatePeers() // nolint: errcheck
+	if err := engine.UpdatePeers(); err != nil {
+		exoip.Logger.Crit(err.Error())
+	}
 
 	go func() {
 		// update list of peers, every 5 minutes
@@ -384,7 +386,10 @@ func main() {
 			time.Sleep(interval - elapsed)
 
 			start := time.Now()
-			engine.UpdatePeers() // nolint: errcheck
+			if err := engine.UpdatePeers(); err != nil {
+				exoip.Logger.Crit(err.Error())
+			}
+
 			if err := engine.UpdateNic(); err != nil {
 				exoip.Logger.Crit(err.Error())
 			}
@@ -399,7 +404,9 @@ func main() {
 			time.Sleep(engine.Interval - elapsed)
 
 			start := time.Now()
-			engine.PingPeers() // nolint: errcheck
+			if err := engine.PingPeers(); err != nil {
+				exoip.Logger.Crit(err.Error())
+			}
 			elapsed = time.Since(start)
 			if elapsed > engine.Interval {
 				exoip.Logger.Warning("PingPeers took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond)

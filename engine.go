@@ -169,8 +169,10 @@ func (engine *Engine) PingPeers() error {
 	defer engine.peersMu.RUnlock()
 
 	for _, peer := range engine.peers {
-		// do not account for errors
-		peer.Send(engine.SendBuf) // nolint: errcheck
+		_, err := peer.Send(engine.SendBuf)
+		if err != nil {
+			Logger.Crit("failure sending to peer %s: %s", peer.VirtualMachineID, err.Error())
+		}
 	}
 	engine.LastSend = time.Now()
 	return nil
