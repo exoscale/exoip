@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:635d91586d88010009079c664a9f8264835c8055197e6fafb04f9134b8a8a1b0"
+  digest = "1:e17d18b233f506404061c27ac4a08624dad38dcd0d49f9cfdae67a7772a4fb8c"
   name = "github.com/exoscale/egoscale"
   packages = ["."]
   pruneopts = ""
-  revision = "81b6b6dcb55291f2612feed053cd6327c55e2a4a"
+  revision = "c6d915cb993f1a54f604acefc0fc15cf6578a87a"
+  version = "v0.11.0"
 
 [[projects]]
   digest = "1:7f569d906bdd20d906b606415b7d794f798f91a62fcfb6a4daa6d50690fb7a3f"
@@ -38,11 +38,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:469d265422d3992c7af23257fb8198d4d9348156b73ea89ae56d8117d4b89005"
+  digest = "1:1132cbdac95d6a2a30f7434f7190b3b1345e85b6071e74911b1dce3e19e1543d"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "3dc4335d56c789b04b0ba99b7a37249d9b614314"
+  revision = "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
 
 [solve-meta]
   analyzer-name = "dep"
