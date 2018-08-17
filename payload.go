@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
+
+	"github.com/exoscale/egoscale"
 )
 
 const payloadLength = 24
@@ -33,7 +34,14 @@ func NewPayload(buf []byte) (*Payload, error) {
 		return nil, errors.New("bad payload (priority should repeat)")
 	}
 
-	nicID, err := UUIDToStr(buf[8:24])
+	nicID, err := egoscale.ParseUUID(fmt.Sprintf(
+		"%s-%s-%s-%s-%s",
+		hex.EncodeToString(buf[8:12]),
+		hex.EncodeToString(buf[12:14]),
+		hex.EncodeToString(buf[14:16]),
+		hex.EncodeToString(buf[16:18]),
+		hex.EncodeToString(buf[18:24]),
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -45,38 +53,4 @@ func NewPayload(buf []byte) (*Payload, error) {
 	}
 
 	return payload, nil
-}
-
-// UUIDToStr converts a UUID into a str
-func UUIDToStr(buf []byte) (string, error) {
-	if len(buf) != 16 {
-		return "", fmt.Errorf("UUID length (%d) mismatch, need 16", len(buf))
-	}
-
-	uuid := fmt.Sprintf("%x-%x-%x-%x-%x", buf[0:4], buf[4:6], buf[6:8], buf[8:10], buf[10:16])
-
-	return uuid, nil
-}
-
-// StrToUUID convert a str into a UUID
-func StrToUUID(uuid string) ([]byte, error) {
-	if len(uuid) != 36 {
-		return nil, fmt.Errorf("UUID source length (%d) mismatch, need 36", len(uuid))
-	}
-
-	uuid = strings.Replace(strings.ToLower(uuid), "-", "", -1)
-	if len(uuid) != 32 { // 36 - 4
-		return nil, errors.New("UUID has wrong length, need 32")
-	}
-
-	ba, err := hex.DecodeString(uuid)
-	if err != nil {
-		return nil, errors.New("invalid UUID")
-	}
-
-	if len(ba) != 16 { // 32 / 2
-		return nil, fmt.Errorf("UUID converted length (%d) mismatch, need 16", len(ba))
-	}
-
-	return ba, nil
 }

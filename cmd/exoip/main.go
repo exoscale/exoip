@@ -259,9 +259,18 @@ func main() {
 	}
 
 	ego := egoscale.NewClient(*csEndpoint, *exoToken, *exoSecret)
+
+	ip := net.ParseIP(*eip)
+	if ip == nil {
+		if _, errP := fmt.Fprintln(os.Stderr, "not a valid IP Address"); errP != nil {
+			panic(errP)
+		}
+		os.Exit(1)
+	}
+
 	if *associateMode {
-		engine = exoip.NewEngine(ego, *eip, *instanceID)
-		if err := engine.ObtainNic(engine.NicID); err != nil {
+		engine = exoip.NewEngine(ego, ip, *egoscale.MustParseUUID(*instanceID))
+		if err := engine.ObtainNic(*engine.NicID); err != nil {
 			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
 				panic(errP)
 			}
@@ -271,7 +280,7 @@ func main() {
 	}
 
 	if *disassociateMode {
-		engine = exoip.NewEngine(ego, *eip, *instanceID)
+		engine = exoip.NewEngine(ego, ip, *egoscale.MustParseUUID(*instanceID))
 		if err := engine.ReleaseMyNic(); err != nil {
 			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
 				panic(errP)
@@ -295,12 +304,12 @@ func main() {
 					continue
 				}
 				for _, addr := range addrs {
-					ip, _, err := net.ParseCIDR(addr.String())
+					ipAddress, _, err := net.ParseCIDR(addr.String())
 					if err != nil {
 						continue
 					}
-					if ip != nil && ip.To4() != nil {
-						*address = fmt.Sprintf("%s%s", ip.String(), *address)
+					if ip != nil && ipAddress.To4() != nil {
+						*address = fmt.Sprintf("%s%s", ipAddress.String(), *address)
 						exoip.Logger.Info("using IP address from %s", iface.Name)
 						break outterfor
 					}
@@ -317,9 +326,9 @@ func main() {
 			os.Exit(1)
 		}
 
-		engine = exoip.NewEngineWatchdog(ego, *address, *eip, *instanceID, *timer, *prio, *deadRatio, nil, *exoSecurityGroup)
+		engine = exoip.NewEngineWatchdog(ego, *address, ip, *egoscale.MustParseUUID(*instanceID), *timer, *prio, *deadRatio, nil, *exoSecurityGroup)
 	} else {
-		engine = exoip.NewEngineWatchdog(ego, *address, *eip, *instanceID, *timer, *prio, *deadRatio, peers, "")
+		engine = exoip.NewEngineWatchdog(ego, *address, ip, *egoscale.MustParseUUID(*instanceID), *timer, *prio, *deadRatio, peers, "")
 	}
 
 	sigs := make(chan os.Signal)
@@ -365,7 +374,9 @@ func main() {
 		}
 	}()
 
-	engine.UpdatePeers() // nolint: errcheck
+	if err := engine.UpdatePeers(); err != nil {
+		exoip.Logger.Crit(err.Error())
+	}
 
 	go func() {
 		// update list of peers, every 5 minutes
@@ -375,7 +386,10 @@ func main() {
 			time.Sleep(interval - elapsed)
 
 			start := time.Now()
-			engine.UpdatePeers() // nolint: errcheck
+			if err := engine.UpdatePeers(); err != nil {
+				exoip.Logger.Crit(err.Error())
+			}
+
 			if err := engine.UpdateNic(); err != nil {
 				exoip.Logger.Crit(err.Error())
 			}
@@ -390,7 +404,9 @@ func main() {
 			time.Sleep(engine.Interval - elapsed)
 
 			start := time.Now()
-			engine.PingPeers() // nolint: errcheck
+			if err := engine.PingPeers(); err != nil {
+				exoip.Logger.Crit(err.Error())
+			}
 			elapsed = time.Since(start)
 			if elapsed > engine.Interval {
 				exoip.Logger.Warning("PingPeers took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond)

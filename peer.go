@@ -5,10 +5,12 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	"github.com/exoscale/egoscale"
 )
 
 // NewPeer creates a new peer
-func NewPeer(listenAddress string, raddr *net.UDPAddr, id, nicID string) *Peer {
+func NewPeer(listenAddress string, raddr *net.UDPAddr, id, nicID egoscale.UUID) *Peer {
 	var laddr *net.UDPAddr
 
 	i := strings.IndexRune(listenAddress, ':')
@@ -23,9 +25,9 @@ func NewPeer(listenAddress string, raddr *net.UDPAddr, id, nicID string) *Peer {
 	assertSuccessOrExit(err)
 
 	return &Peer{
-		VirtualMachineID: id,
+		VirtualMachineID: &id,
 		UDPAddr:          raddr,
-		NicID:            nicID,
+		NicID:            &nicID,
 		Dead:             true,
 		conn:             conn,
 	}
