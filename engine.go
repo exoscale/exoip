@@ -347,7 +347,7 @@ func (engine *Engine) UpdateNic() error {
 		return fmt.Errorf("no default nic found for self")
 	}
 
-	if nic.ID != engine.NicID {
+	if !nic.ID.Equal(*engine.NicID) {
 		return fmt.Errorf("default nic ID doesn't match")
 	}
 

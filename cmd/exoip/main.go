@@ -336,6 +336,9 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT)
 	signal.Notify(sigs, syscall.SIGUSR1)
 	signal.Notify(sigs, syscall.SIGUSR2)
+
+	stopping := false
+
 	go func() {
 		for {
 			sig := <-sigs
@@ -360,6 +363,7 @@ func main() {
 				}
 			default:
 				if engine.State == exoip.StateMaster {
+					stopping = true
 					exoip.Logger.Info("releasing the Nic and stopping.")
 					if _, err := fmt.Fprintln(os.Stderr, "releasing the Nic and stopping"); err != nil {
 						exoip.Logger.Crit(err.Error())
@@ -382,7 +386,7 @@ func main() {
 		// update list of peers, every 5 minutes
 		interval := 5 * time.Minute
 		var elapsed time.Duration
-		for {
+		for !stopping {
 			time.Sleep(interval - elapsed)
 
 			start := time.Now()
@@ -400,7 +404,7 @@ func main() {
 	go func() {
 		// pings our peers, every interval
 		var elapsed time.Duration
-		for {
+		for !stopping {
 			time.Sleep(engine.Interval - elapsed)
 
 			start := time.Now()
@@ -417,7 +421,7 @@ func main() {
 	go func() {
 		// act upon the peers state, every interval
 		var elapsed time.Duration
-		for {
+		for !stopping {
 			time.Sleep(engine.Interval - elapsed)
 
 			start := time.Now()
