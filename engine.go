@@ -57,7 +57,7 @@ func NewEngineWatchdog(client *egoscale.Client, addr string, ip net.IP, instance
 	sendbuf[6] = netbytes[2]
 	sendbuf[7] = netbytes[3]
 
-	for i, b := range instanceID.UUID {
+	for i, b := range nicID.UUID {
 		sendbuf[i+8] = b
 	}
 
@@ -169,10 +169,7 @@ func (engine *Engine) PingPeers() error {
 	defer engine.peersMu.RUnlock()
 
 	for _, peer := range engine.peers {
-		_, err := peer.Send(engine.SendBuf)
-		if err != nil {
-			Logger.Crit("failure sending to peer %s: %s", peer.VirtualMachineID, err.Error())
-		}
+		peer.Send(engine.SendBuf) // nolint: errcheck, gosec
 	}
 	engine.LastSend = time.Now()
 	return nil
@@ -347,7 +344,7 @@ func (engine *Engine) UpdateNic() error {
 		return fmt.Errorf("no default nic found for self")
 	}
 
-	if nic.ID != engine.NicID {
+	if !nic.ID.Equal(*engine.NicID) {
 		return fmt.Errorf("default nic ID doesn't match")
 	}
 
