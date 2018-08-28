@@ -57,7 +57,7 @@ func NewEngineWatchdog(client *egoscale.Client, addr string, ip net.IP, instance
 	sendbuf[6] = netbytes[2]
 	sendbuf[7] = netbytes[3]
 
-	for i, b := range instanceID.UUID {
+	for i, b := range nicID.UUID {
 		sendbuf[i+8] = b
 	}
 

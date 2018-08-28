@@ -387,8 +387,6 @@ func main() {
 		interval := 5 * time.Minute
 		var elapsed time.Duration
 		for !stopping {
-			time.Sleep(interval - elapsed)
-
 			start := time.Now()
 			if err := engine.UpdatePeers(); err != nil {
 				exoip.Logger.Crit(err.Error())
@@ -398,6 +396,7 @@ func main() {
 				exoip.Logger.Crit(err.Error())
 			}
 			elapsed = time.Since(start)
+			time.Sleep(interval - elapsed)
 		}
 	}()
 
@@ -405,8 +404,6 @@ func main() {
 		// pings our peers, every interval
 		var elapsed time.Duration
 		for !stopping {
-			time.Sleep(engine.Interval - elapsed)
-
 			start := time.Now()
 			if err := engine.PingPeers(); err != nil {
 				exoip.Logger.Crit(err.Error())
@@ -415,6 +412,8 @@ func main() {
 			if elapsed > engine.Interval {
 				exoip.Logger.Warning("PingPeers took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond)
 			}
+
+			time.Sleep(engine.Interval - elapsed)
 		}
 	}()
 
@@ -422,14 +421,14 @@ func main() {
 		// act upon the peers state, every interval
 		var elapsed time.Duration
 		for !stopping {
-			time.Sleep(engine.Interval - elapsed)
-
 			start := time.Now()
 			engine.CheckState()
 			elapsed = time.Since(start)
 			if elapsed > engine.Interval {
 				exoip.Logger.Warning("CheckState took longer than allowed interval (%dms): %dms", engine.Interval/time.Millisecond, elapsed/time.Millisecond)
 			}
+
+			time.Sleep(engine.Interval - elapsed)
 		}
 	}()
 
