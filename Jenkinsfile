@@ -46,7 +46,6 @@ def gofmt(repo) {
     image.pull()
     image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/${repo}") {
       sh 'test `gofmt -s -d -e . | tee -a /dev/fd/2 | wc -l` -eq 0'
-      sh 'go mod vendor'
     }
   }
 }
@@ -79,7 +78,7 @@ def build(repo, ...bins) {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.11')
     image.inside("-u root --net=host") {
       for (bin in bins) {
-        sh "cd cmd/${bin} && go install"
+        sh "cd cmd/${bin} && go install -mod=vendor"
         sh "test -e /go/bin/${bin}"
       }
     }
