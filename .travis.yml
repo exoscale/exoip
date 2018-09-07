@@ -12,7 +12,7 @@ matrix:
   - go: "1.11.x"
     script:
       - go test -v ./...
-      - go build -mod=vendor -o=exoip cmd/exoip/main.go
+      - GO111MODULES=on go build -mod=vendor -o=exoip cmd/exoip/main.go
 
 cache: apt
 
