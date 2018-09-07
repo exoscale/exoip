@@ -5,10 +5,14 @@ sudo: true
 
 matrix:
   include:
-  - go: "1.11.x"
+  - go: "1.10.x"
     script:
       - go test -v ./...
       - goreleaser --snapshot --skip-sign
+  - go: "1.11.x"
+    script:
+      - go test -v ./...
+      - go build cmd/exoip
 
 cache: apt
 
