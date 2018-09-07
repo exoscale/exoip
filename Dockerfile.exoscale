@@ -2,9 +2,9 @@ FROM registry.internal.exoscale.ch/exoscale/golang:1.11 as build
 
 RUN mkdir -p /exoip
 ADD . /exoip
-WORKDIR /exoip/cmd/exoip
+WORKDIR /exoip
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w"
+RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -o exoip -ldflags "-s -w" cmd/exoip/main.go
 
 FROM registry.internal.exoscale.ch/exoscale/ubuntu:bionic
 
@@ -16,6 +16,6 @@ LABEL org.label-schema.build-date=${BUILD_DATE} \
       org.label-schema.vcs-url="https://github.com/exoscale/exoip" \
       org.label-schema.schema-version="1.0"
 
-COPY --from=build /exoip/cmd/exoip/exoip exoip
+COPY --from=build /exoip/exoip exoip
 
 ENTRYPOINT ["./exoip", "-O"]

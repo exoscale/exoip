@@ -10,7 +10,7 @@ RUN apk add --no-cache \
         make \
         git \
  && cd /exoip \
- && CGO_ENABLED=0 GOOS=linux go install -ldflags "-s -w" cmd/exoip
+ && CGO_ENABLED=0 GOOS=linux go build -mod vendor -o exoip -ldflags "-s -w" cmd/exoip
 
 
 FROM linuxkit/ca-certificates:v0.6
@@ -23,6 +23,6 @@ LABEL org.label-schema.name="ExoIP" \
 
 
 
-COPY --from=build /go/bin/exoip exoip
+COPY --from=build /exoip/exoip exoip
 
 ENTRYPOINT ["./exoip", "-O"]
