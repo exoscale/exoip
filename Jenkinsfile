@@ -10,20 +10,20 @@ node {
       stage('SCM') {
         checkout scm
       }
-      stage('gofmt') {
-        gofmt(repo)
-      }
       updateGithubCommitStatus('PENDING', "${env.WORKSPACE}/src")
+      stage('gofmt') {
+        gofmt()
+      }
       stage('Build') {
         parallel (
           "go lint": {
             golint(repo, "cmd/exoip")
           },
           "go test": {
-            test(repo)
+            test()
           },
           "go install": {
-            build(repo, "exoip")
+            build("exoip")
           }
         )
       }
@@ -40,12 +40,12 @@ node {
   }
 }
 
-def gofmt(repo) {
+def gofmt() {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.11')
     image.pull()
-    image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/${repo}") {
-      sh 'test `gofmt -s -d -e . | tee -a /dev/fd/2 | wc -l` -eq 0'
+    image.inside("-u root --net=host") {
+      sh 'test $(gofmt -s -d -e $(find -iname "*.go" | grep -v "/vendor/") | tee -a /dev/fd/2 | wc -l) -eq 0'
     }
   }
 }
@@ -65,16 +65,16 @@ def golint(repo, ...extras) {
   }
 }
 
-def test(repo) {
+def test() {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.11')
-    image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/${repo}") {
+    image.inside("-u root --net=host") {
       sh "go test -v -mod=vendor ./..."
     }
   }
 }
 
-def build(repo, ...bins) {
+def build(...bins) {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.11')
     image.inside("-u root --net=host") {
