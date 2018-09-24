@@ -40,7 +40,7 @@ func (s *stringslice) String() string {
 	return strings.Join(*s, ",")
 }
 
-func (s *stringslice) Set(value string) error {
+func (s *stringslice) Set(value string) error { // nolint: unparam
 	if resetPeers {
 		*s = make([]string, 0)
 	}

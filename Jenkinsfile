@@ -52,14 +52,12 @@ def gofmt() {
 
 def golint(repo, ...extras) {
   docker.withRegistry('https://registry.internal.exoscale.ch') {
-    def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.10')
+    def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.11')
     image.pull()
     image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/${repo}") {
-      sh "golint -set_exit_status -min_confidence 0.3  `go list github.com/${repo}/... | grep -v /vendor/`"
-      sh "go vet `go list github.com/${repo}/... | grep -v /vendor/`"
-      sh "cd /go/src/github.com/${repo} && gometalinter ."
+      sh "cd /go/src/github.com/${repo} && golangci-lint ."
       for (extra in extras) {
-        sh "cd /go/src/github.com/${repo} && gometalinter ./${extra}"
+        sh "cd /go/src/github.com/${repo} && golangci-lint run ./${extra}"
       }
     }
   }
