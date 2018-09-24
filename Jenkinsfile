@@ -55,7 +55,7 @@ def golint(repo, ...extras) {
     def image = docker.image('registry.internal.exoscale.ch/exoscale/golang:1.11')
     image.pull()
     image.inside("-u root --net=host -v ${env.WORKSPACE}/src:/go/src/github.com/${repo}") {
-      sh "cd /go/src/github.com/${repo} && golangci-lint ."
+      sh "cd /go/src/github.com/${repo} && golangci-lint run ."
       for (extra in extras) {
         sh "cd /go/src/github.com/${repo} && golangci-lint run ./${extra}"
       }
