@@ -133,17 +133,14 @@ write_files:
       exoscale-peer-group load-balancer  # change me
       exoscale-api-key EXO....           # change me
       exoscale-api-secret LZ...          # change me
-      up /usr/local/bin/exoip -W &
+      up exoip -W &
       down killall exoip
 
 runcmd:
-- wget https://github.com/exoscale/exoip/releases/download/0.3.14/exoip_0.3.14_linux_amd64.tar.gz
-- wget https://github.com/exoscale/exoip/releases/download/0.3.14/exoip_0.3.14_linux_amd64.tar.gz.sig
+- wget https://github.com/exoscale/exoip/releases/download/0.4.0/exoip_0.4.0_linux_amd64.deb
+- wget https://github.com/exoscale/exoip/releases/download/0.4.0/exoip_0.4.0_linux_amd64.deb.sig
 - gpg --recv-keys E458F9F85608DF5A22ECCD158B58C61D4FFE0C86
-- gpg --verify --trust-model always exoip_0.3.14_linux_amd64.tar.gz.sig
-- tar xf exoip_0.3.14_linux_amd64.tar.gz
-- sudo mv exoip /usr/local/bin/
+- gpg --verify --trust-model always exoip_0.4.0_linux_amd64.deb.sig
+- sudo dpkg -i exoip_0.4.0_linux_amd64.deb
 - sudo ifup lo:1
 ```
-
-**NB:** Since Ubuntu Bionic and the move to netplan, the configuration is a bit different. See the [dedicated documentation](https://community.exoscale.com/documentation/compute/eip/#configuring-the-instance-to-use-the-ip-address).

@@ -20,6 +20,16 @@ dockers:
       - "{{ .Tag }}"
       - latest
 
+nfpm:
+  vendor: Exoscale
+  homepage: https://www.exoscale.com
+  maintainer: Exoscale Support <support@exoscale.com>
+  description: Heartbeat monitor for Exoscale Elastic IP Addresses
+  license: Apache 2.0
+  formats:
+    - deb
+    - rpm
+
 dist: build
 
 git:
