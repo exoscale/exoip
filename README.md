@@ -100,18 +100,8 @@ $ echo -n "info" | nc -4u -w1 0.0.0.0 12345
 
 If you wish to inspect **exoip** and build it by yourself, you can install it by using `go get`.
 
-    go get -d github.com/exoscale/exoip/...
-    cd $GOPATH/src/github.com/exoscale/exoip
-    dep ensure -v -vendor-only
     cd cmd/exoip
-    go install
-
-### Updating
-
-It uses [godep](https://github.com/golang/dep), so it should be easy.
-
-    dep status
-    dep ensure -update
+    go build
 
 ## Setup using Cloud Init
 

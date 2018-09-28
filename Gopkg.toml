@@ -1,7 +1,0 @@
-[[constraint]]
-  name = "github.com/exoscale/egoscale"
-  version = "0.11.1"
-
-[[constraint]]
-  name = "github.com/vishvananda/netlink"
-  version = "1.0.0"

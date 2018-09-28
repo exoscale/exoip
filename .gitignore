@@ -1,4 +1,3 @@
 build
-vendor
+go.sum
 .token
-.gopath
