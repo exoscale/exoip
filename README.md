@@ -137,10 +137,10 @@ write_files:
       down killall exoip
 
 runcmd:
-- wget https://github.com/exoscale/exoip/releases/download/0.4.0/exoip_0.4.0_linux_amd64.deb
-- wget https://github.com/exoscale/exoip/releases/download/0.4.0/exoip_0.4.0_linux_amd64.deb.sig
+- wget https://github.com/exoscale/exoip/releases/download/0.4.1/exoip_0.4.1_linux_amd64.deb
+- wget https://github.com/exoscale/exoip/releases/download/0.4.1/exoip_0.4.1_linux_amd64.deb.sig
 - gpg --recv-keys E458F9F85608DF5A22ECCD158B58C61D4FFE0C86
-- gpg --verify --trust-model always exoip_0.4.0_linux_amd64.deb.sig
-- sudo dpkg -i exoip_0.4.0_linux_amd64.deb
+- gpg --verify --trust-model always exoip_0.4.1_linux_amd64.deb.sig
+- sudo dpkg -i exoip_0.4.1_linux_amd64.deb
 - sudo ifup lo:1
 ```
