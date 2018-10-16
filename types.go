@@ -37,6 +37,7 @@ type wrappedLogger struct {
 // Engine represents the ExoIP engine structure
 type Engine struct {
 	client            *egoscale.Client
+	listenPort        int
 	ListenAddress     string
 	DeadRatio         int
 	Interval          time.Duration

@@ -14,11 +14,14 @@ import (
 	"github.com/exoscale/exoip"
 )
 
+// defaultPort used by exoip, can be changed via "-l"
+const defaultPort = 12345
+
 type stringslice []string
 
 var timer = flag.Int("t", 1, "Advertisement interval in seconds")
 var prio = flag.Int("P", 10, "Host priority (lowest wins)")
-var address = flag.String("l", fmt.Sprintf(":%d", exoip.DefaultPort), "Address to bind to")
+var address = flag.String("l", fmt.Sprintf(":%d", defaultPort), "Address to bind to")
 var deadRatio = flag.Int("r", 3, "Dead ratio")
 var exoToken = flag.String("xk", "", "Exoscale API Key")
 var exoSecret = flag.String("xs", "", "Exoscale API Secret")
