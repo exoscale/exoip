@@ -58,9 +58,13 @@ func NewEngineWatchdog(client *egoscale.Client, addr string, ip net.IP, instance
 		sendbuf[i+8] = b
 	}
 
+	serverAddr, err := net.ResolveUDPAddr("udp", addr)
+	assertSuccessOrExit(err)
+
 	engine := &Engine{
 		client:            client,
 		ListenAddress:     addr,
+		listenPort:        serverAddr.Port,
 		DeadRatio:         deadRatio,
 		Interval:          time.Duration(interval) * time.Second,
 		priority:          sendbuf[2],
@@ -113,8 +117,6 @@ func (engine *Engine) NetworkLoop() error {
 
 	serverConn, err := net.ListenUDP("udp", serverAddr)
 	assertSuccessOrExit(err)
-
-	engine.listenPort = serverAddr.Port
 
 	Logger.Info("listening on %s", serverAddr)
 	buf := make([]byte, payloadLength)
