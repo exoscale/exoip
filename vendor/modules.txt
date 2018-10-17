@@ -1,4 +1,4 @@
-# github.com/exoscale/egoscale v0.11.3
+# github.com/exoscale/egoscale v0.12.2
 github.com/exoscale/egoscale
 # github.com/satori/go.uuid v1.2.0
 github.com/satori/go.uuid
