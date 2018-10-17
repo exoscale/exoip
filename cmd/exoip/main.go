@@ -14,6 +14,12 @@ import (
 	"github.com/exoscale/exoip"
 )
 
+var (
+	// version is to be given at compile time
+	version = "dev"
+	commit  = "n/a"
+)
+
 // defaultPort used by exoip, can be changed via "-l"
 const defaultPort = 12345
 
@@ -230,7 +236,7 @@ func main() {
 	flag.Parse()
 
 	if *printVersion {
-		fmt.Printf("%v\n", exoip.Version)
+		fmt.Printf("%s (%s)\n", version, commit)
 		os.Exit(0)
 	}
 

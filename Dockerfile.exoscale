@@ -1,12 +1,25 @@
 FROM registry.internal.exoscale.ch/exoscale/golang:1.11 as build
 
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+
 RUN mkdir -p /exoip
 ADD . /exoip
 WORKDIR /exoip
 
-RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -o exoip -ldflags "-s -w" cmd/exoip/main.go
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+RUN echo ${VERSION}
+RUN go build \
+        -mod vendor \
+        -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${VCS_REF}" \
+        github.com/exoscale/exoip/cmd/exoip
 
 FROM registry.internal.exoscale.ch/exoscale/ubuntu:bionic
+
+ARG BUILD_DATE
+ARG VCS_REF
 
 LABEL org.label-schema.build-date=${BUILD_DATE} \
       org.label-schema.name="ExoIP" \

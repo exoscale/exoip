@@ -6,6 +6,8 @@ node {
   repo = "exoscale/exoip"
 
   try {
+    def image
+
     dir('src') {
       stage('SCM') {
         checkout scm
@@ -14,7 +16,7 @@ node {
       stage('gofmt') {
         gofmt()
       }
-      stage('Build') {
+      stage('build') {
         parallel (
           "go lint": {
             golint(repo, "cmd/exoip")
@@ -24,9 +26,15 @@ node {
           },
           "go install": {
             build("exoip")
-          }
+          },
+          "docker": {
+            image = docker()
+          },
         )
       }
+    }
+    stage('push') {
+      image.push()
     }
   } catch (err) {
     currentBuild.result = 'FAILURE'
@@ -81,5 +89,16 @@ def build(...bins) {
         sh "test -e /go/bin/${bin}"
       }
     }
+  }
+}
+
+def docker() {
+  docker.withRegistry('https://registry.internal.exoscale.ch') {
+    def branch = getGitBranch().replace("/", "-")
+    def tag = getGitTag() ?: (branch == "master" ? "latest" : branch)
+    def version = tag.replaceAll(~/^v(?=\d)/, "")
+    def ref = sh("git rev-parse HEAD")
+    def date = sh('date -u +"%Y-%m-%dT%H:%m:%SZ"')
+    return docker.build("registry.internal.exoscale.ch/exoscale/exoip:" + tag, "-f Dockerfile.exoscale --network=host --no-cache --build-arg VCS_REF=$ref --build-arg BUILD_DATE=$date --build-arg VERSION=$version .")
   }
 }
