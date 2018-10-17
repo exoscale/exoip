@@ -11,9 +11,6 @@ import (
 	"github.com/exoscale/egoscale"
 )
 
-// DefaultPort used by exoip
-const DefaultPort = 12345
-
 // ProtoVersion version of the protocol
 const ProtoVersion = "0201"
 
@@ -61,9 +58,13 @@ func NewEngineWatchdog(client *egoscale.Client, addr string, ip net.IP, instance
 		sendbuf[i+8] = b
 	}
 
+	serverAddr, err := net.ResolveUDPAddr("udp", addr)
+	assertSuccessOrExit(err)
+
 	engine := &Engine{
 		client:            client,
 		ListenAddress:     addr,
+		listenPort:        serverAddr.Port,
 		DeadRatio:         deadRatio,
 		Interval:          time.Duration(interval) * time.Second,
 		priority:          sendbuf[2],
@@ -111,15 +112,16 @@ func NewEngine(client *egoscale.Client, ipAddress net.IP, instanceID egoscale.UU
 
 // NetworkLoop starts the UDP server
 func (engine *Engine) NetworkLoop() error {
-	ServerAddr, err := net.ResolveUDPAddr("udp", engine.ListenAddress)
-	assertSuccessOrExit(err)
-	ServerConn, err := net.ListenUDP("udp", ServerAddr)
+	serverAddr, err := net.ResolveUDPAddr("udp", engine.ListenAddress)
 	assertSuccessOrExit(err)
 
-	Logger.Info("listening on %s", ServerAddr)
+	serverConn, err := net.ListenUDP("udp", serverAddr)
+	assertSuccessOrExit(err)
+
+	Logger.Info("listening on %s", serverAddr)
 	buf := make([]byte, payloadLength)
 	for {
-		n, addr, err := ServerConn.ReadFromUDP(buf)
+		n, addr, err := serverConn.ReadFromUDP(buf)
 		if err != nil {
 			Logger.Crit("network server died")
 			os.Exit(1)
@@ -177,7 +179,7 @@ func (engine *Engine) PingPeers() error {
 
 // FetchPeer fetches a Peer from its IP address
 func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
-	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", peerAddress, DefaultPort))
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", peerAddress, engine.listenPort))
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +423,7 @@ func (engine *Engine) UpdatePeers() error {
 			key := ip.String()
 			if _, ok := engine.peers[key]; !ok {
 				// add peer
-				addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", key, DefaultPort))
+				addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", key, engine.listenPort))
 				if err != nil {
 					Logger.Warning(err.Error())
 					return err
