@@ -99,6 +99,6 @@ def docker() {
     def version = tag.replaceAll(~/^v(?=\d)/, "")
     def ref = sh("git rev-parse HEAD")
     def date = sh('date -u +"%Y-%m-%dT%H:%m:%SZ"')
-    return docker.build("registry.internal.exoscale.ch/exoscale/exoip:" + tag, "--network=host --no-cache --build-arg VCS_REF=$ref --build-arg BUILD_DATE=$date --build-arg VERSION=$version .")
+    return docker.build("registry.internal.exoscale.ch/exoscale/exoip:" + tag, "-f Dockerfile.exoscale --network=host --no-cache --build-arg VCS_REF=$ref --build-arg BUILD_DATE=$date --build-arg VERSION=$version .")
   }
 }
