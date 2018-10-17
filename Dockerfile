@@ -15,7 +15,12 @@ RUN apk add --no-cache \
 
 FROM linuxkit/ca-certificates:v0.6
 
-LABEL org.label-schema.name="ExoIP" \
+ARG BUILD_DATE
+ARG VCS_REF
+
+LABEL org.label-schema.build-date=${BUILD_DATE} \
+      org.label-schema.vcs-ref=${VCS_REF} \
+      org.label-schema.name="ExoIP" \
       org.label-schema.vendor="Exoscale" \
       org.label-schema.description="IP watchdog" \
       org.label-schema.url="https://github.com/exoscale/exoip" \

@@ -14,6 +14,12 @@ import (
 	"github.com/exoscale/exoip"
 )
 
+var (
+	// version is to be given at compile time
+	version = "dev"
+	commit  = "n/a"
+)
+
 type stringslice []string
 
 var timer = flag.Int("t", 1, "Advertisement interval in seconds")
@@ -227,7 +233,7 @@ func main() {
 	flag.Parse()
 
 	if *printVersion {
-		fmt.Printf("%v\n", exoip.Version)
+		fmt.Printf("%s (%s)\n", version, commit)
 		os.Exit(0)
 	}
 
