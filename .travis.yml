@@ -3,16 +3,9 @@ language: go
 dist: xenial
 sudo: true
 
-matrix:
-  include:
-  - go: "1.10.x"
-    script:
-      - go test -v ./...
-      - goreleaser --snapshot --skip-sign
-  - go: "1.11.x"
-    script:
-      - go test -v ./...
-      - GO111MODULE=on go build -mod=vendor github.com/exoscale/exoip/cmd/exoip
+go:
+- 1.10.x
+- 1.11.x
 
 cache: apt
 
@@ -22,10 +15,29 @@ addons:
       - rpm
 
 env:
-  - GORELEASER_VERSION=0.87.0 NFPM_VERSION=0.9.5
+  - GORELEASER_VERSION=0.87.0 NFPM_VERSION=0.9.5 GOLANGCI_LINT_VERSION=1.10.2
 
-before_install:
-  - wget https://github.com/goreleaser/goreleaser/releases/download/v${GORELEASER_VERSION}/goreleaser_amd64.deb
-  - sudo dpkg -i goreleaser_amd64.deb
-  - wget https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_amd64.deb
-  - sudo dpkg -i nfpm_amd64.deb
+matrix:
+  include:
+  - go: "1.10.x"
+    script:
+      - go test -v ./...
+  - go: "1.11.x"
+    script:
+      - go test -v ./...
+      - GO111MODULE=on go build -mod=vendor github.com/exoscale/exoip/cmd/exoip
+  - name: goreleaser
+    go: "1.10.x"
+    script:
+      - wget https://github.com/goreleaser/goreleaser/releases/download/v${GORELEASER_VERSION}/goreleaser_amd64.deb
+      - sudo dpkg -i goreleaser_amd64.deb
+      - wget https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_amd64.deb
+      - sudo dpkg -i nfpm_amd64.deb
+      - goreleaser --snapshot --skip-sign
+  - name: lint
+    go: "1.11.x"
+    script:
+      - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v${GOLANGCI_LINT_VERSION}
+        - golangci-lint run ./...
+
+
