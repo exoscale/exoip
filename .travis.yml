@@ -15,7 +15,7 @@ addons:
       - rpm
 
 env:
-  - GORELEASER_VERSION=0.87.0 NFPM_VERSION=0.9.5 GOLANGCI_LINT_VERSION=1.10.2
+  - GORELEASER_VERSION=0.92.0 NFPM_VERSION=0.9.5 GOLANGCI_LINT_VERSION=1.11.1
 
 matrix:
   include:
@@ -38,6 +38,4 @@ matrix:
     go: "1.11.x"
     script:
       - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v${GOLANGCI_LINT_VERSION}
-        - golangci-lint run ./...
-
-
+      - golangci-lint run ./...
