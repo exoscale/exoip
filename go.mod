@@ -1,9 +1,8 @@
 module github.com/exoscale/exoip
 
 require (
-	github.com/exoscale/egoscale v0.12.2
+	github.com/exoscale/egoscale v0.12.5-0.20181120073343-a92cab6165e4
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/vishvananda/netlink v1.0.0
 	github.com/vishvananda/netns v0.0.0-20180720170159-13995c7128cc // indirect
 	golang.org/x/sys v0.0.0-20180903190138-2b024373dcd9 // indirect

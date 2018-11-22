@@ -1,0 +1,13 @@
+linters-settings:
+  golint:
+    min-confidence: 0.3
+  gocyclo:
+    min-complexity: 25
+
+linters:
+  enable-all: true
+  disable:
+    - gosec
+    - goconst
+    - lll
+    - maligned

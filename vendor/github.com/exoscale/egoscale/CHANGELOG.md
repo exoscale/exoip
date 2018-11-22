@@ -1,6 +1,26 @@
 Changelog
 =========
 
+0.13.0
+------
+
+- change: `Paginate` to accept `Listable`
+- change: `ListCommand` is also `Listable`
+- change: `client.Get` doesn't modify the given resource, returns a new one
+- remove: `Gettable`
+
+0.12.4
+------
+
+- feat: `Snapshot` is `Listable`
+
+0.12.3
+------
+
+- change: replace dep by Go modules
+- change: remove domainid,domain,regionid,listall,isrecursive,... fields
+- remove: `MigrateVirtualMachine`, `CreateUser`, `EnableAccount`, and other admin calls
+
 0.12.2
 ------
 
