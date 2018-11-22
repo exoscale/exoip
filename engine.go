@@ -185,7 +185,7 @@ func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
 	}
 
 	client := engine.client
-	vm := &egoscale.VirtualMachine{
+	query := egoscale.VirtualMachine{
 		Nic: []egoscale.Nic{{
 			IPAddress: addr.IP,
 			IsDefault: true,
@@ -193,10 +193,12 @@ func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
 		ZoneID: engine.ZoneID,
 	}
 
-	if err := client.Get(vm); err != nil {
+	resp, err := client.Get(query)
+	if err != nil {
 		return nil, err
 	}
 
+	vm := resp.(*egoscale.VirtualMachine)
 	nic := vm.DefaultNic()
 	if nic == nil {
 		return nil, fmt.Errorf("peer (%v) has no default nic", peerAddress)
@@ -209,12 +211,12 @@ func (engine *Engine) FetchPeer(peerAddress string) (*Peer, error) {
 func (engine *Engine) FetchNicAndVM() {
 	client := engine.client
 
-	vm := &egoscale.VirtualMachine{
+	resp, err := client.Get(egoscale.VirtualMachine{
 		ID: engine.VirtualMachineID,
-	}
-	err := client.Get(vm)
+	})
 	assertSuccessOrExit(err)
 
+	vm := resp.(*egoscale.VirtualMachine)
 	nic := vm.DefaultNic()
 	if nic == nil {
 		assertSuccessOrExit(fmt.Errorf("cannot find self default nic"))
@@ -248,15 +250,16 @@ func (engine *Engine) ObtainNic(nicID egoscale.UUID) error {
 func (engine *Engine) ReleaseMyNic() error {
 	client := engine.client
 
-	vm := &egoscale.VirtualMachine{
+	resp, err := client.Get(egoscale.VirtualMachine{
 		ID: engine.VirtualMachineID,
-	}
+	})
 
-	if err := client.Get(vm); err != nil {
-		Logger.Crit("could not get virtualmachine: %s. %s", vm.ID, err)
+	if err != nil {
+		Logger.Crit("could not get virtualmachine: %s. %s", engine.VirtualMachineID, err)
 		return err
 	}
 
+	vm := resp.(*egoscale.VirtualMachine)
 	var nicAddressID *egoscale.UUID
 	nic := vm.DefaultNic()
 	if nic != nil {
@@ -294,15 +297,15 @@ func (engine *Engine) ReleaseMyNic() error {
 func (engine *Engine) ReleaseNic(vmID, nicID egoscale.UUID) error {
 	client := engine.client
 
-	vm := &egoscale.VirtualMachine{
+	resp, err := client.Get(egoscale.VirtualMachine{
 		ID: &vmID,
-	}
-	err := client.Get(vm)
+	})
 	if err != nil {
 		Logger.Crit("could not remove IP from NIC VM:%s. %s", vmID, err)
 		return err
 	}
 
+	vm := resp.(*egoscale.VirtualMachine)
 	var nicAddressID *egoscale.UUID
 	nic := vm.DefaultNic()
 	if nic != nil && nic.ID.Equal(nicID) {
@@ -333,14 +336,14 @@ func (engine *Engine) ReleaseNic(vmID, nicID egoscale.UUID) error {
 func (engine *Engine) UpdateNic() error {
 	client := engine.client
 
-	vm := &egoscale.VirtualMachine{
+	resp, err := client.Get(egoscale.VirtualMachine{
 		ID: engine.VirtualMachineID,
-	}
-	err := client.Get(vm)
+	})
 	if err != nil {
 		return fmt.Errorf("error fetching VM %s information, %s", engine.VirtualMachineID, err)
 	}
 
+	vm := resp.(*egoscale.VirtualMachine)
 	nic := vm.DefaultNic()
 	if nic == nil {
 		return fmt.Errorf("no default nic found for self")
