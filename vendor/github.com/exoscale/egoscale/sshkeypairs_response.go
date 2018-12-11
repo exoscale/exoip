@@ -4,7 +4,8 @@ package egoscale
 
 import "fmt"
 
-func (ListSSHKeyPairs) response() interface{} {
+// Response returns the struct to unmarshal
+func (ListSSHKeyPairs) Response() interface{} {
 	return new(ListSSHKeyPairsResponse)
 }
 
@@ -26,8 +27,8 @@ func (ls *ListSSHKeyPairs) SetPageSize(pageSize int) {
 	ls.PageSize = pageSize
 }
 
-// each triggers the callback for each, valid answer or any non 404 issue
-func (ListSSHKeyPairs) each(resp interface{}, callback IterateItemFunc) {
+// Each triggers the callback for each, valid answer or any non 404 issue
+func (ListSSHKeyPairs) Each(resp interface{}, callback IterateItemFunc) {
 	items, ok := resp.(*ListSSHKeyPairsResponse)
 	if !ok {
 		callback(nil, fmt.Errorf("wrong type, ListSSHKeyPairsResponse was expected, got %T", resp))

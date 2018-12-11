@@ -79,11 +79,13 @@ type ResizeVolume struct {
 	_              bool  `name:"resizeVolume" description:"Resizes a volume"`
 }
 
-func (ResizeVolume) response() interface{} {
+// Response returns the struct to unmarshal
+func (ResizeVolume) Response() interface{} {
 	return new(AsyncJobResult)
 }
 
-func (ResizeVolume) asyncResponse() interface{} {
+// AsyncResponse returns the struct to unmarshal the async job
+func (ResizeVolume) AsyncResponse() interface{} {
 	return new(Volume)
 }
 

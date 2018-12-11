@@ -71,17 +71,15 @@ func (sg SecurityGroup) RuleByID(ruleID UUID) (*IngressRule, *EgressRule) {
 
 // IngressRule represents the ingress rule
 type IngressRule struct {
-	CIDR                  *CIDR               `json:"cidr,omitempty" doc:"the CIDR notation for the base IP address of the security group rule"`
-	Description           string              `json:"description,omitempty" doc:"description of the security group rule"`
-	EndPort               uint16              `json:"endport,omitempty" doc:"the ending port of the security group rule "`
-	IcmpCode              uint8               `json:"icmpcode,omitempty" doc:"the code for the ICMP message response"`
-	IcmpType              uint8               `json:"icmptype,omitempty" doc:"the type of the ICMP message response"`
-	Protocol              string              `json:"protocol,omitempty" doc:"the protocol of the security group rule"`
-	RuleID                *UUID               `json:"ruleid" doc:"the id of the security group rule"`
-	SecurityGroupID       *UUID               `json:"securitygroupid,omitempty"`
-	SecurityGroupName     string              `json:"securitygroupname,omitempty" doc:"security group name"`
-	StartPort             uint16              `json:"startport,omitempty" doc:"the starting port of the security group rule"`
-	UserSecurityGroupList []UserSecurityGroup `json:"usersecuritygrouplist,omitempty"`
+	CIDR              *CIDR  `json:"cidr,omitempty" doc:"the CIDR notation for the base IP address of the security group rule"`
+	Description       string `json:"description,omitempty" doc:"description of the security group rule"`
+	EndPort           uint16 `json:"endport,omitempty" doc:"the ending port of the security group rule "`
+	IcmpCode          uint8  `json:"icmpcode,omitempty" doc:"the code for the ICMP message response"`
+	IcmpType          uint8  `json:"icmptype,omitempty" doc:"the type of the ICMP message response"`
+	Protocol          string `json:"protocol,omitempty" doc:"the protocol of the security group rule"`
+	RuleID            *UUID  `json:"ruleid" doc:"the id of the security group rule"`
+	SecurityGroupName string `json:"securitygroupname,omitempty" doc:"security group name"`
+	StartPort         uint16 `json:"startport,omitempty" doc:"the starting port of the security group rule"`
 }
 
 // EgressRule represents the ingress rule
@@ -104,7 +102,8 @@ type CreateSecurityGroup struct {
 	_           bool   `name:"createSecurityGroup" description:"Creates a security group"`
 }
 
-func (CreateSecurityGroup) response() interface{} {
+// Response returns the struct to unmarshal
+func (CreateSecurityGroup) Response() interface{} {
 	return new(SecurityGroup)
 }
 
@@ -115,7 +114,8 @@ type DeleteSecurityGroup struct {
 	_    bool   `name:"deleteSecurityGroup" description:"Deletes security group"`
 }
 
-func (DeleteSecurityGroup) response() interface{} {
+// Response returns the struct to unmarshal
+func (DeleteSecurityGroup) Response() interface{} {
 	return new(booleanResponse)
 }
 
@@ -134,11 +134,13 @@ type AuthorizeSecurityGroupIngress struct {
 	_                     bool                `name:"authorizeSecurityGroupIngress" description:"Authorize a particular ingress/egress rule for this security group"`
 }
 
-func (AuthorizeSecurityGroupIngress) response() interface{} {
+// Response returns the struct to unmarshal
+func (AuthorizeSecurityGroupIngress) Response() interface{} {
 	return new(AsyncJobResult)
 }
 
-func (AuthorizeSecurityGroupIngress) asyncResponse() interface{} {
+// AsyncResponse returns the struct to unmarshal the async job
+func (AuthorizeSecurityGroupIngress) AsyncResponse() interface{} {
 	return new(SecurityGroup)
 }
 
@@ -158,11 +160,13 @@ func (req AuthorizeSecurityGroupIngress) onBeforeSend(params url.Values) error {
 // AuthorizeSecurityGroupEgress (Async) represents the egress rule creation
 type AuthorizeSecurityGroupEgress AuthorizeSecurityGroupIngress
 
-func (AuthorizeSecurityGroupEgress) response() interface{} {
+// Response returns the struct to unmarshal
+func (AuthorizeSecurityGroupEgress) Response() interface{} {
 	return new(AsyncJobResult)
 }
 
-func (AuthorizeSecurityGroupEgress) asyncResponse() interface{} {
+// AsyncResponse returns the struct to unmarshal the async job
+func (AuthorizeSecurityGroupEgress) AsyncResponse() interface{} {
 	return new(SecurityGroup)
 }
 
@@ -176,10 +180,13 @@ type RevokeSecurityGroupIngress struct {
 	_  bool  `name:"revokeSecurityGroupIngress" description:"Deletes a particular ingress rule from this security group"`
 }
 
-func (RevokeSecurityGroupIngress) response() interface{} {
+// Response returns the struct to unmarshal
+func (RevokeSecurityGroupIngress) Response() interface{} {
 	return new(AsyncJobResult)
 }
-func (RevokeSecurityGroupIngress) asyncResponse() interface{} {
+
+// AsyncResponse returns the struct to unmarshal the async job
+func (RevokeSecurityGroupIngress) AsyncResponse() interface{} {
 	return new(booleanResponse)
 }
 
@@ -189,11 +196,13 @@ type RevokeSecurityGroupEgress struct {
 	_  bool  `name:"revokeSecurityGroupEgress" description:"Deletes a particular egress rule from this security group"`
 }
 
-func (RevokeSecurityGroupEgress) response() interface{} {
+// Response returns the struct to unmarshal
+func (RevokeSecurityGroupEgress) Response() interface{} {
 	return new(AsyncJobResult)
 }
 
-func (RevokeSecurityGroupEgress) asyncResponse() interface{} {
+// AsyncResponse returns the struct to unmarshal the async job
+func (RevokeSecurityGroupEgress) AsyncResponse() interface{} {
 	return new(booleanResponse)
 }
 

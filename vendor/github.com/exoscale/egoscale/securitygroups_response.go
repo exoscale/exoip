@@ -4,7 +4,8 @@ package egoscale
 
 import "fmt"
 
-func (ListSecurityGroups) response() interface{} {
+// Response returns the struct to unmarshal
+func (ListSecurityGroups) Response() interface{} {
 	return new(ListSecurityGroupsResponse)
 }
 
@@ -26,8 +27,8 @@ func (ls *ListSecurityGroups) SetPageSize(pageSize int) {
 	ls.PageSize = pageSize
 }
 
-// each triggers the callback for each, valid answer or any non 404 issue
-func (ListSecurityGroups) each(resp interface{}, callback IterateItemFunc) {
+// Each triggers the callback for each, valid answer or any non 404 issue
+func (ListSecurityGroups) Each(resp interface{}, callback IterateItemFunc) {
 	items, ok := resp.(*ListSecurityGroupsResponse)
 	if !ok {
 		callback(nil, fmt.Errorf("wrong type, ListSecurityGroupsResponse was expected, got %T", resp))

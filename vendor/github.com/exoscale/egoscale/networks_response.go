@@ -4,7 +4,8 @@ package egoscale
 
 import "fmt"
 
-func (ListNetworks) response() interface{} {
+// Response returns the struct to unmarshal
+func (ListNetworks) Response() interface{} {
 	return new(ListNetworksResponse)
 }
 
@@ -26,8 +27,8 @@ func (ls *ListNetworks) SetPageSize(pageSize int) {
 	ls.PageSize = pageSize
 }
 
-// each triggers the callback for each, valid answer or any non 404 issue
-func (ListNetworks) each(resp interface{}, callback IterateItemFunc) {
+// Each triggers the callback for each, valid answer or any non 404 issue
+func (ListNetworks) Each(resp interface{}, callback IterateItemFunc) {
 	items, ok := resp.(*ListNetworksResponse)
 	if !ok {
 		callback(nil, fmt.Errorf("wrong type, ListNetworksResponse was expected, got %T", resp))

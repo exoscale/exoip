@@ -4,7 +4,8 @@ package egoscale
 
 import "fmt"
 
-func (ListResourceLimits) response() interface{} {
+// Response returns the struct to unmarshal
+func (ListResourceLimits) Response() interface{} {
 	return new(ListResourceLimitsResponse)
 }
 
@@ -26,8 +27,8 @@ func (ls *ListResourceLimits) SetPageSize(pageSize int) {
 	ls.PageSize = pageSize
 }
 
-// each triggers the callback for each, valid answer or any non 404 issue
-func (ListResourceLimits) each(resp interface{}, callback IterateItemFunc) {
+// Each triggers the callback for each, valid answer or any non 404 issue
+func (ListResourceLimits) Each(resp interface{}, callback IterateItemFunc) {
 	items, ok := resp.(*ListResourceLimitsResponse)
 	if !ok {
 		callback(nil, fmt.Errorf("wrong type, ListResourceLimitsResponse was expected, got %T", resp))

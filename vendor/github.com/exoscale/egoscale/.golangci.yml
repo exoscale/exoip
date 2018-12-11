@@ -2,12 +2,25 @@ linters-settings:
   golint:
     min-confidence: 0.3
   gocyclo:
-    min-complexity: 25
+    min-complexity: 28
+  goimports:
+    local-prefixes: github.com
 
 linters:
-  enable-all: true
-  disable:
-    - gosec
-    - goconst
-    - lll
-    - maligned
+  enable:
+    - deadcode
+    - dupl
+    - errcheck
+    - gocyclo
+    - goimports
+    - golint
+    - gosimple
+    - govet
+    - ineffassign
+    - megacheck
+    - nakedret
+    - staticcheck
+    - structcheck
+    - unused
+    - varcheck
+  disable-all: true
