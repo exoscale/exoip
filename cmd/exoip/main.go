@@ -197,20 +197,28 @@ func checkAPI() bool {
 }
 
 func printConfiguration() {
-	fmt.Printf("exoip will watch over: %s\n", *eip)
-	fmt.Printf("\tbind-address: %s\n", *address)
-	fmt.Printf("\thost-priority: %d\n", *prio)
-	fmt.Printf("\tadvertisement-interval: %d\n", *timer)
-	fmt.Printf("\tdead-ratio: %d\n", *deadRatio)
+	if *watchMode {
+		fmt.Printf("exoip will watch over: %s\n", *eip)
+		fmt.Printf("\tbind-address: %s\n", *address)
+		fmt.Printf("\thost-priority: %d\n", *prio)
+		fmt.Printf("\tadvertisement-interval: %d\n", *timer)
+		fmt.Printf("\tdead-ratio: %d\n", *deadRatio)
+	} else {
+		fmt.Printf("exoip manages: %s\n", *eip)
+	}
 	fmt.Printf("\texoscale-api-key: %s\n", *exoToken)
 	fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
 	fmt.Printf("\texoscale-api-endpoint: %s\n", *csEndpoint)
 
-	exoip.Logger.Info("exoip will watch over: %s\n", *eip)
-	exoip.Logger.Info("\tbind-address: %s\n", *address)
-	exoip.Logger.Info("\thost-priority: %d\n", *prio)
-	exoip.Logger.Info("\tadvertisement-interval: %d\n", *timer)
-	exoip.Logger.Info("\tdead-ratio: %d\n", *deadRatio)
+	if *watchMode {
+		exoip.Logger.Info("exoip will watch over: %s\n", *eip)
+		exoip.Logger.Info("\tbind-address: %s\n", *address)
+		exoip.Logger.Info("\thost-priority: %d\n", *prio)
+		exoip.Logger.Info("\tadvertisement-interval: %d\n", *timer)
+		exoip.Logger.Info("\tdead-ratio: %d\n", *deadRatio)
+	} else {
+		exoip.Logger.Info("exoip manages: %s\n", *eip)
+	}
 	exoip.Logger.Info("\texoscale-api-key: %s\n", *exoToken)
 	exoip.Logger.Info("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
 	exoip.Logger.Info("\texoscale-api-endpoint: %s\n", *csEndpoint)
