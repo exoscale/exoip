@@ -6,8 +6,10 @@ package exoip
 type State int
 
 const (
+	// StateUnknown represents the initial state
+	StateUnknown State = iota
 	// StateBackup represents the backup state
-	StateBackup State = iota
+	StateBackup
 	// StateMaster represents the master state
 	StateMaster
 )

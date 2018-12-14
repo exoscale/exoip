@@ -495,27 +495,24 @@ func (engine *Engine) BackupOf(peer *Peer) bool {
 }
 
 // PerformStateTransition transition to the given state
-func (engine *Engine) PerformStateTransition(state State) {
+func (engine *Engine) PerformStateTransition(state State) error {
 
 	if engine.State == state {
-		return
+		return nil
 	}
 
 	Logger.Info("switching state to %s", state)
 
-	var err error
-	if state == StateBackup {
-		err = engine.ReleaseNic(*engine.VirtualMachineID, *engine.NicID)
-	} else {
-		err = engine.ObtainNic(*engine.NicID)
-	}
-
-	if err != nil {
-		Logger.Crit("could not switch state. %s", err)
-		return
-	}
-
+	oldState := engine.State
 	engine.State = state
+
+	err := engine.UpdateNic()
+	if err != nil {
+		engine.State = oldState
+		return err
+	}
+
+	return nil
 }
 
 // CheckState updates the states of our peers
@@ -545,10 +542,15 @@ func (engine *Engine) CheckState() {
 		}
 	}
 
+	var err error
 	if bestAdvertisement {
-		engine.PerformStateTransition(StateMaster)
+		err = engine.PerformStateTransition(StateMaster)
 	} else {
-		engine.PerformStateTransition(StateBackup)
+		err = engine.PerformStateTransition(StateBackup)
+	}
+
+	if err != nil {
+		Logger.Crit("could not switch state. %s", err)
 	}
 
 	// Disconnect the dead peers from their NIC

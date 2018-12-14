@@ -301,20 +301,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *associateMode {
+	if *associateMode || *disassociateMode {
 		engine = exoip.NewEngine(ego, ip, *egoscale.MustParseUUID(*instanceID))
-		if err := engine.ObtainNic(*engine.NicID); err != nil {
-			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
-				panic(errP)
-			}
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}
 
-	if *disassociateMode {
-		engine = exoip.NewEngine(ego, ip, *egoscale.MustParseUUID(*instanceID))
-		if err := engine.ReleaseMyNic(); err != nil {
+		var state exoip.State
+		if *associateMode {
+			state = exoip.StateMaster
+		} else {
+			state = exoip.StateBackup
+		}
+
+		if err := engine.PerformStateTransition(state); err != nil {
 			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
 				panic(errP)
 			}
