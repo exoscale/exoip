@@ -23,14 +23,14 @@ before_script:
   - ./cc-test-reporter before-build
 
 script:
-  - |
+  - >
     [ "$(echo "$TRAVIS_GO_VERSION" | perl -pe "s/\\.[x\\d]+$//")" = "1.11" ] &&
     go test -mod vendor -race -coverprofile=c.out -covermode=atomic . ||
     go test -race -coverprofile=c.out -covermode=atomic .
-  - |
+  - >
     [ "$(echo "$TRAVIS_GO_VERSION" | perl -pe "s/\\.[x\\d]+$//")" = "1.11" ] &&
-    go build github.com/exoscale/exoip/cmd/exoip ||
-    go build -mod=vendor github.com/exoscale/exoip/cmd/exoip
+    go build -mod=vendor github.com/exoscale/exoip/cmd/exoip ||
+    go build github.com/exoscale/exoip/cmd/exoip
 
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
