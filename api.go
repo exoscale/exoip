@@ -10,13 +10,12 @@ import (
 // fetchMyInfo fetches the nic of the current instance
 func fetchMyInfo(ego *egoscale.Client, instanceID egoscale.UUID) (*egoscale.UUID, *egoscale.UUID, error) {
 
-	vm := &egoscale.VirtualMachine{
-		ID: &instanceID,
-	}
-	if err := ego.Get(vm); err != nil {
+	resp, err := ego.Get(egoscale.VirtualMachine{ID: &instanceID})
+	if err != nil {
 		return nil, nil, err
 	}
 
+	vm := resp.(*egoscale.VirtualMachine)
 	nic := vm.DefaultNic()
 	if nic == nil {
 		return nil, nil, errors.New("cannot find virtual machine default nic")
