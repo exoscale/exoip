@@ -15,17 +15,28 @@ addons:
       - rpm
 
 env:
-  - GORELEASER_VERSION=0.92.0 NFPM_VERSION=0.9.5 GOLANGCI_LINT_VERSION=1.11.1
+  - GORELEASER_VERSION=0.95.0 NFPM_VERSION=0.9.7 GOLANGCI_LINT_VERSION=1.12.2 GO111MODULE=on
+
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+
+script:
+  - >
+    [ "$(echo "$TRAVIS_GO_VERSION" | perl -pe "s/\\.[x\\d]+$//")" = "1.11" ] &&
+    go test -mod vendor -race -coverprofile=c.out -covermode=atomic . ||
+    go test -race -coverprofile=c.out -covermode=atomic .
+  - >
+    [ "$(echo "$TRAVIS_GO_VERSION" | perl -pe "s/\\.[x\\d]+$//")" = "1.11" ] &&
+    go build -mod=vendor github.com/exoscale/exoip/cmd/exoip ||
+    go build github.com/exoscale/exoip/cmd/exoip
+
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 matrix:
   include:
-  - go: "1.10.x"
-    script:
-      - go test -v ./...
-  - go: "1.11.x"
-    script:
-      - go test -v ./...
-      - GO111MODULE=on go build -mod=vendor github.com/exoscale/exoip/cmd/exoip
   - name: goreleaser
     go: "1.10.x"
     script:
