@@ -4,9 +4,9 @@ package exoip
 
 import "strconv"
 
-const _State_name = "StateBackupStateMaster"
+const _State_name = "StateUnknownStateBackupStateMaster"
 
-var _State_index = [...]uint8{0, 11, 22}
+var _State_index = [...]uint8{0, 12, 23, 34}
 
 func (i State) String() string {
 	if i < 0 || i >= State(len(_State_index)-1) {

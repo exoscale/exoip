@@ -105,7 +105,7 @@ func setupLogger() {
 }
 
 func checkConfiguration() {
-	die := !checkMode() || !checkEIP()
+	die := !checkMode() || !checkEIP() || !checkInstanceID()
 	if *watchMode {
 		die = die || !checkPeerAndSecurityGroups() || !checkPeerDefinition() || !checkHostPriority()
 	}
@@ -137,6 +137,17 @@ func checkMode() bool {
 		return false
 	}
 
+	return true
+}
+
+func checkInstanceID() bool {
+	if _, err := egoscale.ParseUUID(*instanceID); err != nil {
+		exoip.Logger.Crit("missing or malformed instance ID")
+		if _, err := fmt.Fprintln(os.Stderr, "missing or malformed instance ID provided"); err != nil {
+			panic(err)
+		}
+		return false
+	}
 	return true
 }
 
@@ -206,6 +217,7 @@ func printConfiguration() {
 	} else {
 		fmt.Printf("exoip manages: %s\n", *eip)
 	}
+	fmt.Printf("\tinstance-id: %s\n", *instanceID)
 	fmt.Printf("\texoscale-api-key: %s\n", *exoToken)
 	fmt.Printf("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
 	fmt.Printf("\texoscale-api-endpoint: %s\n", *csEndpoint)
@@ -219,6 +231,7 @@ func printConfiguration() {
 	} else {
 		exoip.Logger.Info("exoip manages: %s\n", *eip)
 	}
+	exoip.Logger.Info("\tinstance-id: %s\n", *instanceID)
 	exoip.Logger.Info("\texoscale-api-key: %s\n", *exoToken)
 	exoip.Logger.Info("\texoscale-api-secret: %sXXXX\n", (*exoSecret)[0:2])
 	exoip.Logger.Info("\texoscale-api-endpoint: %s\n", *csEndpoint)
@@ -250,13 +263,6 @@ func main() {
 
 	// Sanity Checks
 	setupLogger()
-	checkConfiguration()
-	if exoip.Verbose {
-		printConfiguration()
-	}
-	if *validateConfig {
-		os.Exit(0)
-	}
 
 	if (*instanceID) == "" {
 		mserver, err := exoip.FindMetadataServer()
@@ -275,6 +281,16 @@ func main() {
 		}
 	}
 
+	checkConfiguration()
+
+	if exoip.Verbose {
+		printConfiguration()
+	}
+
+	if *validateConfig {
+		os.Exit(0)
+	}
+
 	ego := egoscale.NewClient(*csEndpoint, *exoToken, *exoSecret)
 
 	ip := net.ParseIP(*eip)
@@ -285,20 +301,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *associateMode {
+	if *associateMode || *disassociateMode {
 		engine = exoip.NewEngine(ego, ip, *egoscale.MustParseUUID(*instanceID))
-		if err := engine.ObtainNic(*engine.NicID); err != nil {
-			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
-				panic(errP)
-			}
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}
 
-	if *disassociateMode {
-		engine = exoip.NewEngine(ego, ip, *egoscale.MustParseUUID(*instanceID))
-		if err := engine.ReleaseMyNic(); err != nil {
+		var state exoip.State
+		if *associateMode {
+			state = exoip.StateMaster
+		} else {
+			state = exoip.StateBackup
+		}
+
+		if err := engine.PerformStateTransition(state); err != nil {
 			if _, errP := fmt.Fprintln(os.Stderr, err); errP != nil {
 				panic(errP)
 			}
