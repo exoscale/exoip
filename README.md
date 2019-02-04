@@ -2,6 +2,8 @@ exoip: heartbeat monitor for Exoscale Elastic IP Addresses
 ==========================================================
 
 [![Build Status](https://travis-ci.org/exoscale/exoip.svg?branch=master)](https://travis-ci.org/exoscale/exoip)
+[![Docker image](https://images.microbadger.com/badges/image/exoscale/exoip.svg)](https://microbadger.com/images/exoscale/exoip)
+[![Latest version](https://images.microbadger.com/badges/version/exoscale/exoip.svg)](https://microbadger.com/images/exoscale/exoip)
 
 **exoip** is a small tool meant to make the process of watching
 Exoscale Elastic IP Addresses and performing state transitions much
@@ -137,10 +139,10 @@ write_files:
       down killall exoip
 
 runcmd:
-- wget https://github.com/exoscale/exoip/releases/download/v0.4.2/exoip_0.4.2_linux_amd64.deb
-- wget https://github.com/exoscale/exoip/releases/download/v0.4.2/exoip_0.4.2_linux_amd64.deb.sig
+- wget https://github.com/exoscale/exoip/releases/download/v0.4.3/exoip_0.4.3_linux_amd64.deb
+- wget https://github.com/exoscale/exoip/releases/download/v0.4.3/exoip_0.4.3_linux_amd64.deb.sig
 - gpg --recv-keys E458F9F85608DF5A22ECCD158B58C61D4FFE0C86
-- gpg --verify --trust-model always exoip_0.4.2_linux_amd64.deb.sig
-- sudo dpkg -i exoip_0.4.2_linux_amd64.deb
+- gpg --verify --trust-model always exoip_0.4.3_linux_amd64.deb.sig
+- sudo dpkg -i exoip_0.4.3_linux_amd64.deb
 - sudo ifup lo:1
 ```
