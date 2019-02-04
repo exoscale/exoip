@@ -1,16 +1,11 @@
-FROM golang:1.11-alpine as build
+FROM golang:1.11-stretch as build
 
 RUN mkdir -p /exoip
 ADD . /exoip
 WORKDIR /exoip
 
-RUN apk add --no-cache \
-            --update \
-            --virtual build-dependencies \
-        make \
-        git \
- && cd /exoip \
- && CGO_ENABLED=0 GOOS=linux go build -mod vendor -o exoip -ldflags "-s -w" cmd/exoip
+RUN cd /exoip \
+ && CGO_ENABLED=0 GOOS=linux go build -mod vendor -o exoip -ldflags "-s -w" github.com/exoscale/exoip/cmd/exoip
 
 
 FROM linuxkit/ca-certificates:v0.6
