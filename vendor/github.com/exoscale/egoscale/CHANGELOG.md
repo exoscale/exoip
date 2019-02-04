@@ -1,6 +1,24 @@
 Changelog
 =========
 
+0.13.3
+------
+
+- fix: runstatus unmarshalling errors
+- feature: `UUID` implements DeepCopy, DeepCopyInto
+- change: export `BooleanResponse`
+
+0.13.2
+------
+
+- feat: initial Runstatus API support
+- feat: `admin` namespace containing `ListVirtualMachines` for admin usage
+
+0.13.1
+------
+
+- feat: `Iso` support `ListIsos`, `AttachIso`, and `DetachIso`
+
 0.13.0
 ------
 
