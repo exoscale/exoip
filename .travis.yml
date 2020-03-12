@@ -4,8 +4,7 @@ dist: xenial
 sudo: true
 
 go:
-- 1.10.x
-- 1.11.x
+- 1.13.x
 
 cache: apt
 
@@ -15,20 +14,18 @@ addons:
       - rpm
 
 env:
-  - GORELEASER_VERSION=0.95.0 NFPM_VERSION=0.9.7 GOLANGCI_LINT_VERSION=1.12.2 GO111MODULE=on
+  - GORELEASER_VERSION=0.128.0 NFPM_VERSION=1.2.0 GOLANGCI_LINT_VERSION=1.23.8 GO111MODULE=on
 
 before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - curl -sL https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
 script:
   - >
-    [ "$(echo "$TRAVIS_GO_VERSION" | perl -pe "s/\\.[x\\d]+$//")" = "1.11" ] &&
     go test -mod vendor -race -coverprofile=c.out -covermode=atomic . ||
     go test -race -coverprofile=c.out -covermode=atomic .
   - >
-    [ "$(echo "$TRAVIS_GO_VERSION" | perl -pe "s/\\.[x\\d]+$//")" = "1.11" ] &&
     go build -mod=vendor github.com/exoscale/exoip/cmd/exoip ||
     go build github.com/exoscale/exoip/cmd/exoip
 
@@ -38,7 +35,7 @@ after_script:
 matrix:
   include:
   - name: goreleaser
-    go: "1.10.x"
+    go: "1.13.x"
     script:
       - wget https://github.com/goreleaser/goreleaser/releases/download/v${GORELEASER_VERSION}/goreleaser_amd64.deb
       - sudo dpkg -i goreleaser_amd64.deb
@@ -46,7 +43,7 @@ matrix:
       - sudo dpkg -i nfpm_amd64.deb
       - goreleaser --snapshot --skip-sign
   - name: lint
-    go: "1.11.x"
+    go: "1.13.x"
     script:
       - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v${GOLANGCI_LINT_VERSION}
       - golangci-lint run ./...
