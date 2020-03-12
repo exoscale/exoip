@@ -1,7 +1,7 @@
-# github.com/exoscale/egoscale v0.13.3
+# github.com/exoscale/egoscale v0.23.0
 github.com/exoscale/egoscale
-# github.com/satori/go.uuid v1.2.0
-github.com/satori/go.uuid
+# github.com/gofrs/uuid v3.2.0+incompatible
+github.com/gofrs/uuid
 # github.com/vishvananda/netlink v1.0.0
 github.com/vishvananda/netlink
 github.com/vishvananda/netlink/nl

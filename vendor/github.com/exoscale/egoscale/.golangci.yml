@@ -11,6 +11,7 @@ linters:
     - deadcode
     - dupl
     - errcheck
+    - gocritic
     - gocyclo
     - goimports
     - golint
@@ -19,6 +20,7 @@ linters:
     - ineffassign
     - megacheck
     - nakedret
+    - scopelint
     - staticcheck
     - structcheck
     - unused

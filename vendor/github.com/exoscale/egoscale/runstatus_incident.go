@@ -3,6 +3,7 @@ package egoscale
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -40,7 +41,9 @@ func (incident RunstatusIncident) Match(other RunstatusIncident) bool {
 
 //RunstatusIncidentList is a list of incident
 type RunstatusIncidentList struct {
-	Incidents []RunstatusIncident `json:"incidents"`
+	Next      string              `json:"next"`
+	Previous  string              `json:"previous"`
+	Incidents []RunstatusIncident `json:"results"`
 }
 
 // GetRunstatusIncident retrieves the details of a specific incident.
@@ -58,18 +61,14 @@ func (client *Client) GetRunstatusIncident(ctx context.Context, incident Runstat
 		return nil, err
 	}
 
-	is, err := client.ListRunstatusIncidents(ctx, *page)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range is {
-		if is[i].Match(incident) {
-			return &is[i], nil
+	for i := range page.Incidents {
+		j := &page.Incidents[i]
+		if j.Match(incident) {
+			return j, nil
 		}
 	}
 
-	return nil, fmt.Errorf("%#v not found", incident)
+	return nil, errors.New("incident not found")
 }
 
 func (client *Client) getRunstatusIncident(ctx context.Context, incidentURL string) (*RunstatusIncident, error) {
@@ -91,18 +90,51 @@ func (client *Client) ListRunstatusIncidents(ctx context.Context, page Runstatus
 		return nil, fmt.Errorf("empty Incidents URL for %#v", page)
 	}
 
-	resp, err := client.runstatusRequest(ctx, page.IncidentsURL, nil, "GET")
-	if err != nil {
-		return nil, err
+	results := make([]RunstatusIncident, 0)
+
+	var err error
+	client.PaginateRunstatusIncidents(ctx, page, func(incident *RunstatusIncident, e error) bool {
+		if e != nil {
+			err = e
+			return false
+		}
+
+		results = append(results, *incident)
+		return true
+	})
+
+	return results, err
+}
+
+// PaginateRunstatusIncidents paginate Incidents
+func (client *Client) PaginateRunstatusIncidents(ctx context.Context, page RunstatusPage, callback func(*RunstatusIncident, error) bool) {
+	if page.IncidentsURL == "" {
+		callback(nil, fmt.Errorf("empty Incidents URL for %#v", page))
+		return
 	}
 
-	var p *RunstatusIncidentList
-	if err := json.Unmarshal(resp, &p); err != nil {
-		return nil, err
-	}
+	incidentsURL := page.IncidentsURL
+	for incidentsURL != "" {
+		resp, err := client.runstatusRequest(ctx, incidentsURL, nil, "GET")
+		if err != nil {
+			callback(nil, err)
+			return
+		}
 
-	// NOTE: no pagination
-	return p.Incidents, nil
+		var is *RunstatusIncidentList
+		if err := json.Unmarshal(resp, &is); err != nil {
+			callback(nil, err)
+			return
+		}
+
+		for i := range is.Incidents {
+			if cont := callback(&is.Incidents[i], nil); !cont {
+				return
+			}
+		}
+
+		incidentsURL = is.Next
+	}
 }
 
 // CreateRunstatusIncident create runstatus incident

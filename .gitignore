@@ -1,5 +1,4 @@
 build
-go.sum
 .token
 ops.asc
 Dockerfile.goreleaser
