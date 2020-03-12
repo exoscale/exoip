@@ -1,9 +1,13 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -40,6 +44,9 @@ var validateConfig = flag.Bool("n", false, "Validate configuration and exit")
 var watchMode = flag.Bool("W", false, "Watchdog mode")
 var associateMode = flag.Bool("A", false, "Associate EIP and exit")
 var disassociateMode = flag.Bool("D", false, "Dissociate EIP and exit")
+var caCertFile = flag.String("ca-cert", "", "Path to client TLS CA certificate file")
+var certFile = flag.String("cert", "", "Path to client TLS client certificate file")
+var keyFile = flag.String("key", "", "Path to client TLS client certificate private key file")
 var logStdout = flag.Bool("O", false, "Do not log to syslog, use standard output")
 var printVersion = flag.Bool("version", false, "Print version and quit")
 var peers stringslice
@@ -248,7 +255,6 @@ func printConfiguration() {
 }
 
 func main() {
-
 	var engine *exoip.Engine
 
 	flag.Var(&peers, "p", "peers to communicate with")
@@ -292,6 +298,34 @@ func main() {
 	}
 
 	ego := egoscale.NewClient(*csEndpoint, *exoToken, *exoSecret)
+
+	if *caCertFile != "" && *certFile != "" && *keyFile != "" {
+		caCert, err := ioutil.ReadFile(*caCertFile)
+		if err != nil {
+			panic(err)
+		}
+
+		caCertPool, err := x509.SystemCertPool()
+		if err != nil {
+			panic(err)
+		}
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
+		if err != nil {
+			panic(err)
+		}
+
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      caCertPool,
+		}
+		tlsConfig.BuildNameToCertificate()
+
+		tlsTransport := ego.HTTPClient.Transport.(*http.Transport).Clone()
+		tlsTransport.TLSClientConfig = tlsConfig
+		ego.HTTPClient.Transport = tlsTransport
+	}
 
 	ip := net.ParseIP(*eip)
 	if ip == nil {
