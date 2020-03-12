@@ -8,34 +8,33 @@ builds:
     goarch:
       - amd64
 
-sign:
-  cmd: gpg
-  args: ["-u", "ops@exoscale.ch", "--detach-sign", "${artifact}"]
-  artifacts: all
+signs:
+  -
+    cmd: gpg
+    args: ["-u", "ops@exoscale.ch", "--detach-sign", "${artifact}"]
+    artifacts: all
 
 dockers:
-  - image: exoscale/exoip
+  -
     dockerfile: Dockerfile.minimal
-    binary: exoip
+    binaries: [exoip]
     skip_push: true
-    tag_templates:
-      - "{{ .Tag }}"
-      - latest
+    image_templates:
+      - "exoscale/exoip:{{ .Tag }}"
+      - "exoscale/exoip:latest"
 
-nfpm:
-  vendor: Exoscale
-  homepage: https://www.exoscale.com
-  maintainer: Exoscale Support <support@exoscale.com>
-  description: Heartbeat monitor for Exoscale Elastic IP Addresses
-  license: Apache 2.0
-  formats:
-    - deb
-    - rpm
+nfpms:
+  -
+    vendor: Exoscale
+    homepage: https://www.exoscale.com
+    maintainer: Exoscale Support <support@exoscale.com>
+    description: Heartbeat monitor for Exoscale Elastic IP Addresses
+    license: Apache 2.0
+    formats:
+      - deb
+      - rpm
 
 dist: build
-
-git:
-  short_hash: true
 
 release:
   github:
