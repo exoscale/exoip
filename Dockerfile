@@ -1,4 +1,4 @@
-FROM golang:1.11-stretch as build
+FROM golang:1.13-stretch as build
 
 RUN mkdir -p /exoip
 ADD . /exoip
