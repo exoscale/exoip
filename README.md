@@ -141,7 +141,7 @@ write_files:
 runcmd:
 - wget https://github.com/exoscale/exoip/releases/download/v0.4.3/exoip_0.4.3_linux_amd64.deb
 - wget https://github.com/exoscale/exoip/releases/download/v0.4.3/exoip_0.4.3_linux_amd64.deb.sig
-- gpg --recv-keys E458F9F85608DF5A22ECCD158B58C61D4FFE0C86
+- gpg --keyserver hkps://keys.opengpg.org --recv-keys B2DB6B250321137D9DB7210281426F034A3D05F7
 - gpg --verify --trust-model always exoip_0.4.3_linux_amd64.deb.sig
 - sudo dpkg -i exoip_0.4.3_linux_amd64.deb
 - sudo ifup lo:1
