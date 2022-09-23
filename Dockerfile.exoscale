@@ -1,4 +1,6 @@
-FROM registry.internal.exoscale.ch/exoscale/golang:1.11 as build
+ARG EXOSCALE_DOCKER_REGISTRY=registry.internal.exoscale.ch
+
+FROM ${EXOSCALE_DOCKER_REGISTRY}/exoscale/golang:1.11 as build
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -16,7 +18,7 @@ RUN go build \
         -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${VCS_REF}" \
         github.com/exoscale/exoip/cmd/exoip
 
-FROM registry.internal.exoscale.ch/exoscale/ubuntu:bionic
+FROM ${EXOSCALE_DOCKER_REGISTRY}/exoscale/ubuntu:bionic
 
 ARG BUILD_DATE
 ARG VCS_REF
